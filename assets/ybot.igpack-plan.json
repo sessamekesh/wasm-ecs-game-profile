@@ -1,0 +1,61 @@
+{
+  "output_path": "resources/ybot.igpack",
+  "actions": [
+    {
+      "igasset_name": "geo",
+      "action_type": "AssimpToDracoAction",
+      "action": {
+        "input_file_path": "ybot-geo.fbx",
+        "include_bones": true,
+        "assimp_mesh_names": [
+          "Alpha_Surface",
+          "Alpha_Joints"
+        ],
+        "draco_params": {
+          "compression_level": 10,
+          "decompression_level": 10
+        }
+      }
+    },
+    {
+      "igasset_name": "skeleton",
+      "action_type": "AssimpExtractOzzSkeleton",
+      "action": {
+        "input_file_path": "ybot-geo.fbx",
+        "skeleton_root_node_name": "mixamorig:Hips_$AssimpFbx$_Translation"
+      }
+    },
+    {
+      "igasset_name": "idle",
+      "action_type": "AssimpExtractOzzAnimation",
+      "action": {
+        "input_file_path": "idle.fbx",
+        "animation_name": "mixamo.com"
+      }
+    },
+    {
+      "igasset_name": "walk",
+      "action_type": "AssimpExtractOzzAnimation",
+      "action": {
+        "input_file_path": "walk.fbx",
+        "animation_name": "mixamo.com"
+      }
+    },
+    {
+      "igasset_name": "run",
+      "action_type": "AssimpExtractOzzAnimation",
+      "action": {
+        "input_file_path": "run.fbx",
+        "animation_name": "mixamo.com"
+      }
+    },
+    {
+      "igasset_name": "defeated",
+      "action_type": "AssimpExtractOzzAnimation",
+      "action": {
+        "input_file_path": "defeated.fbx",
+        "animation_name": "mixamo.com"
+      }
+    }
+  ]
+}

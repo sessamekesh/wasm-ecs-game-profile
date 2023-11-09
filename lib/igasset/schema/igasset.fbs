@@ -1,0 +1,60 @@
+namespace IgAsset;
+
+table Mat4 {
+  values: [float];
+}
+
+enum IndexFormat : byte { Uint16 = 1, Uint32 }
+
+table DracoGeometry {
+  pos_attrib: int8 = -1;
+  normal_attrib: int8 = -1;
+  tangent_attrib: int8 = -1;
+  bitangent_attrib: int8 = -1;
+  texcoord_attrib: int8 = -1;
+  bone_idx_attrib: int8 = -1;
+  bone_weight_attrib: int8 = -1;
+
+  draco_bin: [ubyte];
+  index_format: IndexFormat = Uint16;
+
+  ozz_bone_names: [string];
+  ozz_inv_bind_poses: [Mat4];
+}
+
+table WgslSource {
+  source: string;
+
+  vertex_entry_point: string;
+  fragment_entry_point: string;
+  compute_entry_point: string;
+}
+
+table OzzSkeleton {
+  ozz_data: [ubyte];
+}
+
+table OzzAnimation {
+  ozz_data: [ubyte];
+  bone_names: [string];
+}
+
+// TODO (sessamekesh): Fmod sound bank asset
+
+union SingleAssetData {
+  DracoGeometry,
+  WgslSource,
+  OzzSkeleton,
+  OzzAnimation
+}
+
+table SingleAsset {
+  name: string;
+  data: SingleAssetData;
+}
+
+table AssetPack {
+  assets: [SingleAsset];
+}
+
+root_type AssetPack;

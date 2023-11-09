@@ -1,0 +1,60 @@
+namespace IgpackGen;
+
+table CopyWgslSourceAction {
+  input_file_path: string;
+  vertex_entry_point: string;
+  fragment_entry_point: string;
+  compute_entry_point: string;
+
+  strip_comments: bool = false;
+}
+
+table DracoCompressionParams {
+  compression_level: uint8 = 10;
+  decompression_level: uint8 = 10;
+
+  general_quantization: uint8 = 11;
+  pos_quantization: uint8 = 11;
+  normal_quantization: uint8 = 11;
+  texcoord_quantization: uint8 = 11;
+}
+
+table AssimpToDracoAction {
+  input_file_path: string;
+  assimp_mesh_names: [string];
+
+  include_tangent_bitangents: bool = false;
+  include_texcoords: bool = true;
+  include_bones: bool = false;
+
+  draco_params: DracoCompressionParams;
+}
+
+table AssimpExtractOzzSkeleton {
+  input_file_path: string;
+  skeleton_root_node_name: string;
+}
+
+table AssimpExtractOzzAnimation {
+  input_file_path: string;
+  animation_name: string;
+}
+
+union SingleActionData {
+  CopyWgslSourceAction,
+  AssimpToDracoAction,
+  AssimpExtractOzzSkeleton,
+  AssimpExtractOzzAnimation
+}
+
+table SingleAction {
+  igasset_name: string;
+  action: SingleActionData;
+}
+
+table IgpackGenPlan {
+  output_path: string;
+  actions: [SingleAction];
+}
+
+root_type IgpackGenPlan;

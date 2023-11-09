@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <canvas id="game-canvas" width="1800" height="1080"></canvas>
+    <script src="./igdemo.js"></script>
+    <script>
+        /** App configuration - provide in HTML inputs instead! */
+        const config = {
+            rngSeed: 12345,
+            numEnemyMobs: 50,
+            numHeroes: 4,
+            numWarmupFrames: 200,
+            numProfiles: 1,
+            profileFrameGapSize: 0,
+            renderOutput: true,
+            multithreaded: true,
+        };
+
+        IgDemoModule().then((GameLibInst) => {
+            GameLibInst['canvas'] = document.getElementById('game-canvas');
+            const proc_table = GameLibInst['create_proc_table'](
+                /* dump_profile_cb */
+                (profileString) => {
+                    console.log('Profile:', profileString);
+                });
+            GameLibInst.create_new_app(
+                /* canvas_name */
+                '#game-canvas',
+                /* config */
+                config,
+                /* proc_table */
+                proc_table,
+                /* resolve */
+                (app) => {
+                    let last_frame_time = performance.now();
+                    const frame = () => {
+                        const this_frame_time = performance.now();
+                        const dt = (this_frame_time - last_frame_time) / 1000;
+                        last_frame_time = this_frame_time;
+
+                        app.update_and_render(dt);
+
+                        requestAnimationFrame(frame);
+                    };
+                    requestAnimationFrame(frame);
+                },
+                /* reject */
+                console.error);
+        });</script>
+</body>
+</html>
