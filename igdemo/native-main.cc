@@ -33,7 +33,8 @@ int main(int argc, char** argv) {
                    "Seed value for random number generation")
         ->default_val(std::chrono::high_resolution_clock::now()
                           .time_since_epoch()
-                          .count())
+                          .count() %
+                      0xFFFFFFFF)
         ->check(CLI::PositiveNumber);
     cli.add_option("-e,--enemy_count", num_enemy_mobs,
                    "Number of enemy mobs to spawn around the world")

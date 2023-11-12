@@ -85,7 +85,8 @@ class IgdemoApp {
   ~IgdemoApp() = default;
 
  private:
-  IgdemoApp(IgdemoConfig config, IgdemoProcTable proc_table, entt::registry r,
+  IgdemoApp(IgdemoConfig config, IgdemoProcTable proc_table,
+            std::unique_ptr<entt::registry> r,
             igecs::Scheduler frame_execution_graph, iggpu::AppBase* app_base,
             std::shared_ptr<igasync::TaskList> main_thread_tasks,
             std::shared_ptr<igasync::TaskList> async_tasks)
@@ -101,7 +102,7 @@ class IgdemoApp {
 
   IgdemoConfig config_;
   IgdemoProcTable proc_table_;
-  entt::registry r_;
+  std::unique_ptr<entt::registry> r_;
 
   igecs::Scheduler frame_execution_graph_;
   iggpu::AppBase* app_base_;

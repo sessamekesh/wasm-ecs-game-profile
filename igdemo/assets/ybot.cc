@@ -6,11 +6,11 @@
 namespace {
 
 struct CtxYbotResources {
-  std::unique_ptr<igasset::OzzAnimationWithNames> DefeatedAnimation;
-  std::unique_ptr<igasset::OzzAnimationWithNames> WalkAnimation;
-  std::unique_ptr<igasset::OzzAnimationWithNames> RunAnimation;
-  std::unique_ptr<igasset::OzzAnimationWithNames> IdleAnimation;
-  std::unique_ptr<ozz::animation::Skeleton> Skeleton;
+  igasset::OzzAnimationWithNames DefeatedAnimation;
+  igasset::OzzAnimationWithNames WalkAnimation;
+  igasset::OzzAnimationWithNames RunAnimation;
+  igasset::OzzAnimationWithNames IdleAnimation;
+  ozz::animation::Skeleton Skeleton;
 
   igdemo::AnimatedPbrGeometry Geometry;
 };
@@ -26,7 +26,7 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_ybot_resources(
     std::shared_ptr<igasync::ExecutionContext> main_thread_tasks,
     std::shared_ptr<igasync::ExecutionContext> compute_tasks) {
   auto decoder_promise =
-      procs.loadFileCb(asset_root_path + "resources/ybot.igpack")
+      procs.loadFileCb(asset_root_path + "ybot.igpack")
           ->then_consuming(
               [](std::variant<std::string, FileReadError> rsl) {
                 if (std::holds_alternative<FileReadError>(rsl)) {
@@ -281,15 +281,19 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_ybot_resources(
           return missing_elements;
         }
 
-        auto ybot_geometry = std::make_unique<AnimatedPbrGeometry>(
-            device, queue, *pos_norm_data, *bone_weights, *indices,
-            *std::move(bone_names), *std::move(inv_bind_poses));
+        AnimatedPbrGeometry ybot_geometry{device,
+                                          queue,
+                                          *pos_norm_data,
+                                          *bone_weights,
+                                          *indices,
+                                          *std::move(bone_names),
+                                          *std::move(inv_bind_poses)};
 
         auto wv = igecs::WorldView::Thin(r);
 
-        wv.attach_ctx<CtxYbotResources>(
-            std::move(defeated), std::move(walk), std::move(run),
-            std::move(idle), std::move(skeleton), std::move(ybot_geometry));
+        wv.attach_ctx<CtxYbotResources>(CtxYbotResources{
+            std::move(*defeated), std::move(*walk), std::move(*run),
+            std::move(*idle), std::move(*skeleton), std::move(ybot_geometry)});
 
         return {};
       },

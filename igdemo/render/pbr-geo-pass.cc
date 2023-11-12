@@ -69,6 +69,8 @@ const igecs::WorldView::Decl& PbrGeoPassSystem::decl() {
           // COMPONENT ITERATORS
           .reads<AnimatedPbrInstance>()
           .reads<SkinComponent>();
+
+  return decl;
 }
 
 void PbrGeoPassSystem::run(igecs::WorldView* wv) {

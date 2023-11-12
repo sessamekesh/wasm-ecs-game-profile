@@ -9,6 +9,27 @@
 
 namespace {
 
+// https://stackoverflow.com/a/55113454
+class hash_tuple {
+  template <class T>
+  struct component {
+    const T& value;
+    component(const T& value) : value(value) {}
+    uintmax_t operator,(uintmax_t n) const {
+      n ^= std::hash<T>()(value);
+      n ^= n << (sizeof(uintmax_t) * 4 - 1);
+      return n ^ std::hash<uintmax_t>()(n);
+    }
+  };
+
+ public:
+  template <class Tuple>
+  size_t operator()(const Tuple& tuple) const {
+    return std::hash<uintmax_t>()(std::apply(
+        [](const auto&... xs) { return (component(xs), ..., 0); }, tuple));
+  }
+};
+
 struct CtxOzzSamplingConcurrencyParams {
   std::uint32_t samplingChunkSize;
   std::uint32_t transformationChunkSize;
@@ -48,10 +69,11 @@ struct CtxOzzJobRemappers {
   using PgsKeyT = std::tuple<const ozz::animation::Skeleton*,
                              const std::vector<std::string>*>;
 
-  std::unordered_map<RasKeyT,
-                     igasset::RemapAnimationToSkeletonIndicesJob::Context>
+  std::unordered_map<
+      RasKeyT, igasset::RemapAnimationToSkeletonIndicesJob::Context, hash_tuple>
       rasMap;
-  std::unordered_map<PgsKeyT, igasset::PrepareGpuSkinningDataJob::Context>
+  std::unordered_map<PgsKeyT, igasset::PrepareGpuSkinningDataJob::Context,
+                     hash_tuple>
       pgsMap;
 
   igasset::RemapAnimationToSkeletonIndicesJob::Context& ras_context(
@@ -87,7 +109,8 @@ struct CtxOzzJobRemappers {
 namespace igdemo {
 
 void init_animation_systems(igecs::WorldView* wv) {
-  wv->attach_ctx<CtxOzzSamplingConcurrencyParams>(20, 20);
+  wv->attach_ctx<CtxOzzSamplingConcurrencyParams>(
+      CtxOzzSamplingConcurrencyParams{20, 20});
   wv->attach_ctx<CtxOzzJobRemappers>();
 }
 
@@ -216,13 +239,14 @@ const igecs::WorldView::Decl& TransformOzzAnimationToModelSpaceSystem::decl() {
       igecs::WorldView::Decl()
           // Defined by calling init_animation_systems
           .ctx_reads<CtxOzzSamplingConcurrencyParams>()
-          .ctx_reads<CtxOzzJobRemappers>()
+          .ctx_writes<CtxOzzJobRemappers>()
 
           // Iterators (external)
           .writes<SkinComponent>()
 
           // Iterators (internal)
           .reads<OzzSamplingBuffer>()
+          .reads<AnimationStateComponent>()
           .writes<OzzTransformationsBuffers>();
 
   return decl;
@@ -302,8 +326,8 @@ TransformOzzAnimationToModelSpaceSystem::run(
                       ozzTransformationsBuffers.skeletonModels.size());
         ltm_job.Run();
 
-        // Job 3 - remap skeleton indices to geometry indices, and apply inverse
-        // bind poses
+        // Job 3 - remap skeleton indices to geometry indices, and apply
+        // inverse bind poses
         igasset::PrepareGpuSkinningDataJob pgs_job;
         pgs_job.skeleton = skinComponent.skeleton;
         pgs_job.context = &transform_contexts.pgs_context(
@@ -320,6 +344,8 @@ TransformOzzAnimationToModelSpaceSystem::run(
     }),
                   any_thread);
   }
+
+  return combiner->combine([](auto) {}, any_thread);
 }
 
 }  // namespace igdemo

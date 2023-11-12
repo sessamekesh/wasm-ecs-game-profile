@@ -105,7 +105,7 @@ class Scheduler {
         requires(concepts::HasAsynchronousRunMethod<SystemT>)
       [[nodiscard]] Node build() {
         return with_decl(SystemT::decl())
-            .build(SystemT::run, , igecs::CttiTypeId::of<SystemT>(),
+            .build(SystemT::run, igecs::CttiTypeId::of<SystemT>(),
                    igecs::CttiTypeId::GetName<SystemT>());
       }
 

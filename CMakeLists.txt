@@ -28,6 +28,7 @@ include(cmake/gen_igpack.cmake)
 # Project itself
 #
 set(igdemo_includes
+  "include/igdemo/assets/core-shaders.h"
   "include/igdemo/assets/ybot.h"
   "include/igdemo/logic/framecommon.h"
   "include/igdemo/render/animated-pbr.h"
@@ -42,6 +43,7 @@ set(igdemo_includes
   "include/igdemo/scheduler.h")
 
 set(igdemo_sources
+  "igdemo/assets/core-shaders.cc"
   "igdemo/assets/ybot.cc"
   "igdemo/render/animated-pbr.cc"
   "igdemo/render/ctx-components.cc"

@@ -122,8 +122,7 @@ fn fs(frag: VertexOutput) -> @location(0) vec4f {
   let V = normalize(camera_position - frag.world_pos);
   let R = reflect(-V, N);
 
-  let base_albedo = textureSample(albedoTextureData, pbrTexSampler, input.texcoord).rgb;
-  let pbr_params = colorParams.albedo;
+  let base_albedo = colorParams.albedo;
   let base_metal = colorParams.metallic;
   let base_roughness = colorParams.roughness;
 

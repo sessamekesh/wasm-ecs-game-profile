@@ -352,7 +352,7 @@ class WorldView {
     ::assert_and_print<T>(decl_.can_read<T>(), "has");
     read_types_.insert(CttiTypeId::of<T>());
 #endif
-    return registry_->ctx().contains<T>(e);
+    return registry_->try_get<T>(e) != nullptr;
   }
 
   template <typename T>
