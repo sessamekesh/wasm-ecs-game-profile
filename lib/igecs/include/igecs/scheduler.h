@@ -16,12 +16,26 @@ namespace concepts {
 template <typename T>
 concept HasSynchronousUpdateMethod = requires(T&& t, igecs::WorldView* wv) {
   { T::update(wv) } -> std::same_as<void>;
+  { T::decl() } -> std::same_as<const igecs::WorldView::Decl&>;
 };
 
 template <typename T>
 concept HasSynchronousRunMethod = requires(T&& t, igecs::WorldView* wv) {
   { T::run(wv) } -> std::same_as<void>;
+  { T::decl() } -> std::same_as<const igecs::WorldView::Decl&>;
 };
+
+template <typename T>
+concept HasAsynchronousRunMethod = requires(
+    T&& t, igecs::WorldView* wv, std::shared_ptr<igasync::TaskList> main_thread,
+    std::shared_ptr<igasync::TaskList> any_thread,
+    std::function<void(igasync::TaskProfile profile)> profile_cb) {
+  {
+    T::run(wv, main_thread, any_thread, profile_cb)
+  } -> std::same_as<std::shared_ptr<igasync::Promise<void>>>;
+  { T::decl() } -> std::same_as<const igecs::WorldView::Decl&>;
+};
+
 }  // namespace concepts
 
 /**
@@ -60,6 +74,8 @@ class Scheduler {
       [[nodiscard]] Node build(
           std::function<std::shared_ptr<igasync::Promise<void>>(
               WorldView* wv,
+              std::shared_ptr<igasync::TaskList> main_thread_task_list,
+              std::shared_ptr<igasync::TaskList> any_thread_task_list,
               std::function<void(igasync::TaskProfile profile)> profile_cb)>
               cb,
           igecs::CttiTypeId system_id, std::string system_name);
@@ -72,15 +88,25 @@ class Scheduler {
       template <typename SystemT>
         requires(concepts::HasSynchronousRunMethod<SystemT>)
       [[nodiscard]] Node build() {
-        return build(SystemT::run, igecs::CttiTypeId::of<SystemT>(),
-                     igecs::CttiTypeId::GetName<SystemT>());
+        return with_decl(SystemT::decl())
+            .build(SystemT::run, igecs::CttiTypeId::of<SystemT>(),
+                   igecs::CttiTypeId::GetName<SystemT>());
       }
 
       template <typename SystemT>
         requires(concepts::HasSynchronousUpdateMethod<SystemT>)
       [[nodiscard]] Node build() {
-        return build(SystemT::update, igecs::CttiTypeId::of<SystemT>(),
-                     igecs::CttiTypeId::GetName<SystemT>());
+        return with_decl(SystemT::decl())
+            .build(SystemT::update, igecs::CttiTypeId::of<SystemT>(),
+                   igecs::CttiTypeId::GetName<SystemT>());
+      }
+
+      template <typename SystemT>
+        requires(concepts::HasAsynchronousRunMethod<SystemT>)
+      [[nodiscard]] Node build() {
+        return with_decl(SystemT::decl())
+            .build(SystemT::run, , igecs::CttiTypeId::of<SystemT>(),
+                   igecs::CttiTypeId::GetName<SystemT>());
       }
 
      private:
@@ -98,9 +124,8 @@ class Scheduler {
     };
 
     std::shared_ptr<igasync::Promise<void>> schedule(
-        entt::registry* world,
-        std::shared_ptr<igasync::ExecutionContext> main_thread,
-        std::shared_ptr<igasync::ExecutionContext> any_thread,
+        entt::registry* world, std::shared_ptr<igasync::TaskList> main_thread,
+        std::shared_ptr<igasync::TaskList> any_thread,
         profile::FrameProfiler* profiler);
 
    private:
@@ -108,6 +133,8 @@ class Scheduler {
          std::vector<NodeId> dependency_ids,
          std::function<std::shared_ptr<igasync::Promise<void>>(
              WorldView* wv,
+             std::shared_ptr<igasync::TaskList> main_thread_task_list,
+             std::shared_ptr<igasync::TaskList> any_thread_task_list,
              std::function<void(igasync::TaskProfile profile)> profile_cb)>
              cb,
          igecs::CttiTypeId system_id, std::string system_name,
@@ -117,7 +144,8 @@ class Scheduler {
     bool main_thread_only_;
     WorldView::Decl wv_decl_;
     std::function<std::shared_ptr<igasync::Promise<void>>(
-        WorldView* wv,
+        WorldView* wv, std::shared_ptr<igasync::TaskList> main_thread_task_list,
+        std::shared_ptr<igasync::TaskList> any_thread_task_list,
         std::function<void(igasync::TaskProfile profile)> profile_cb)>
         cb_;
     std::vector<NodeId> dependency_ids_;

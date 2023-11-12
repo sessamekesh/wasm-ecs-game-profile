@@ -29,19 +29,33 @@ include(cmake/gen_igpack.cmake)
 #
 set(igdemo_includes
   "include/igdemo/assets/ybot.h"
+  "include/igdemo/logic/framecommon.h"
+  "include/igdemo/render/animated-pbr.h"
   "include/igdemo/render/ctx-components.h"
+  "include/igdemo/render/pbr-geo-pass.h"
   "include/igdemo/render/tonemap-pass.h"
+  "include/igdemo/render/skeletal-animation.h"
+  "include/igdemo/render/wgpu-helpers.h"
+  "include/igdemo/render/world-transform-component.h"
+  "include/igdemo/systems/animation.h"
   "include/igdemo/igdemo-app.h"
   "include/igdemo/scheduler.h")
 
 set(igdemo_sources
   "igdemo/assets/ybot.cc"
+  "igdemo/render/animated-pbr.cc"
+  "igdemo/render/ctx-components.cc"
+  "igdemo/render/pbr-geo-pass.cc"
   "igdemo/render/tonemap-pass.cc"
+  "igdemo/render/wgpu-helpers.cc"
+  "igdemo/systems/animation.cc"
   "igdemo/igdemo-app.cc"
   "igdemo/scheduler.cc")
 
 if (EMSCRIPTEN)
   set(igdemo_platform_sources
+    "include/igdemo/platform/web/raii-fetch.h"
+    "igdemo/platform/web/raii-fetch.cc"
     "igdemo/wasm-bindings.cc")
 else ()
   set(igdemo_platform_sources
@@ -74,5 +88,15 @@ BUILD_IG_ASSET_PACK_PLAN(
     TARGET_OUTPUT_FILES
       "resources/ybot.igpack")
 
+BUILD_IG_ASSET_PACK_PLAN(
+    TARGET_NAME igp-shaders
+    PLAN assets/shaders.igpack-plan.json
+    INDIR assets
+    INFILES
+      "shaders/aces_tonemapping.wgsl"
+      "shaders/animated_pbr.wgsl"
+    TARGET_OUTPUT_FILES
+      "resources/shaders.igpack")
+
 add_dependencies(igdemo
-  igp-ybot)
+  igp-ybot igp-shaders)

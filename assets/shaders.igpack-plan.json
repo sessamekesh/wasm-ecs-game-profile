@@ -1,0 +1,25 @@
+{
+  "output_path": "resources/shaders.igpack",
+  "actions": [
+    {
+      "igasset_name": "pbrAnimatedWgsl",
+      "action_type": "CopyWgslSourceAction",
+      "action": {
+        "input_file_path": "shaders/animated_pbr.wgsl",
+        "vertex_entry_point": "vs",
+        "fragment_entry_point": "fs",
+        "strip_comments": false
+      }
+    },
+    {
+      "igasset_name": "acesTonemappingWgsl",
+      "action_type": "CopyWgslSourceAction",
+      "action": {
+        "input_file_path": "shaders/aces_tonemapping.wgsl",
+        "vertex_entry_point": "vs",
+        "fragment_entry_point": "fs",
+        "strip_comments": false
+      }
+    }
+  ]
+}

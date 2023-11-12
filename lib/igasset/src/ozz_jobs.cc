@@ -15,7 +15,8 @@ RemapAnimationToSkeletonIndicesJob::Context::Context()
     : skeleton_(nullptr), animation_(nullptr) {}
 
 bool RemapAnimationToSkeletonIndicesJob::Context::check_or_init(
-    ozz::animation::Skeleton* skeleton, OzzAnimationWithNames* animation) {
+    const ozz::animation::Skeleton* skeleton,
+    const OzzAnimationWithNames* animation) {
   if (skeleton == nullptr || animation == nullptr) {
     return false;
   }
@@ -147,7 +148,8 @@ PrepareGpuSkinningDataJob::Context::Context()
       end_(nullptr) {}
 
 bool PrepareGpuSkinningDataJob::Context::check_or_init(
-    ozz::animation::Skeleton* skeleton, std::vector<std::string>* model_bones) {
+    const ozz::animation::Skeleton* skeleton,
+    const std::vector<std::string>* model_bones) {
   if (skeleton == nullptr || model_bones == nullptr) {
     return false;
   }

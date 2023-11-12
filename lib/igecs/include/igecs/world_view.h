@@ -4,6 +4,8 @@
 #include <igecs/config.h>
 #include <igecs/ctti_type_id.h>
 
+#include <type_traits>
+
 #include "evt_queue.h"
 
 #ifdef IG_ENABLE_ECS_VALIDATION

@@ -1,5 +1,7 @@
 #include <emscripten/bind.h>
+#include <emscripten/fetch.h>
 #include <igdemo/igdemo-app.h>
+#include <igdemo/platform/web/raii-fetch.h>
 
 #include <iostream>
 #include <sstream>
@@ -21,6 +23,7 @@ igdemo::IgdemoProcTable create_proc_table(val dump_profile_cb) {
   proc_table.dumpProfileCb = [dump_profile_cb](std::string json) {
     dump_profile_cb(json);
   };
+  proc_table.loadFileCb = &igdemo::web::read_file;
 
   return proc_table;
 }

@@ -50,9 +50,16 @@ struct IgdemoConfig {
   bool multithreaded;
 };
 
+enum class FileReadError { FileNotFound, FileNotRead };
+
 struct IgdemoProcTable {
   /** @brief Callback to dump the collected profile(s) */
   std::function<void(std::string)> dumpProfileCb;
+
+  /** @brief Method to asynchronously load a file, given a path */
+  std::function<std::shared_ptr<igasync::Promise<
+      std::variant<std::string, FileReadError>>>(std::string file_path)>
+      loadFileCb;
 };
 
 struct IgdemoLoadError {

@@ -80,6 +80,9 @@ int main(int argc, char** argv) {
   config.renderOutput = render_output;
   config.rngSeed = rng_seed;
 
+  //
+  // Proc table (platform details)
+  //
   igdemo::IgdemoProcTable proc_table{};
   proc_table.dumpProfileCb = [profile_prefix,
                               profile_out_dir](std::string json) {
@@ -98,6 +101,36 @@ int main(int argc, char** argv) {
 
                  fout << json;
                });
+  };
+  proc_table.loadFileCb = [](std::string file_path) {
+    auto rsl = igasync::Promise<
+        std::variant<std::string, igdemo::FileReadError>>::Create();
+    std::async(
+        std::launch::async,
+        [rsl](std::string path) {
+          if (!std::filesystem::exists(path)) {
+            rsl->resolve(igdemo::FileReadError::FileNotFound);
+            return;
+          }
+
+          std::ifstream fin(path, std::ios::binary | std::ios::ate);
+          if (!fin) {
+            rsl->resolve(igdemo::FileReadError::FileNotFound);
+            return;
+          }
+
+          auto size = fin.tellg();
+          fin.seekg(0, std::ios::beg);
+          std::string data(size, '\0');
+          if (!fin.read(&data[0], size)) {
+            rsl->resolve(igdemo::FileReadError::FileNotRead);
+            return;
+          }
+
+          rsl->resolve(std::move(data));
+        },
+        file_path);
+    return rsl;
   };
 
   igasync::ThreadPool::Desc thread_pool_desc{};

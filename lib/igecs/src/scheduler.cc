@@ -45,7 +45,8 @@ Scheduler::Node::Builder& Scheduler::Node::Builder::depends_on(
 
 Scheduler::Node Scheduler::Node::Builder::build(
     std::function<std::shared_ptr<igasync::Promise<void>>(
-        WorldView* wv,
+        WorldView* wv, std::shared_ptr<igasync::TaskList> main_thread_task_list,
+        std::shared_ptr<igasync::TaskList> any_thread_task_list,
         std::function<void(igasync::TaskProfile profile)> profile_cb)>
         cb,
     igecs::CttiTypeId system_id, std::string system_name) {
@@ -66,6 +67,8 @@ Scheduler::Node Scheduler::Node::Builder::build(void (*cb)(WorldView* wv),
                                                 igecs::CttiTypeId system_id,
                                                 std::string system_name) {
   auto fn = [cb](WorldView* wv,
+                 std::shared_ptr<igasync::TaskList> main_thread_task_list,
+                 std::shared_ptr<igasync::TaskList> any_thread_task_list,
                  std::function<void(igasync::TaskProfile profile)> profile_cb) {
     cb(wv);
     return igasync::Promise<void>::Immediate();
@@ -86,7 +89,8 @@ Scheduler::Node::Node(
     WorldView::Decl wv_decl, bool main_thread_only, NodeId id,
     std::vector<NodeId> dependency_ids,
     std::function<std::shared_ptr<igasync::Promise<void>>(
-        WorldView* wv,
+        WorldView* wv, std::shared_ptr<igasync::TaskList> main_thread_task_list,
+        std::shared_ptr<igasync::TaskList> any_thread_task_list,
         std::function<void(igasync::TaskProfile profile)> profile_cb)>
         cb,
     igecs::CttiTypeId system_id, std::string system_name,
@@ -101,13 +105,12 @@ Scheduler::Node::Node(
       dependency_cttis_(std::move(dependency_cttis)) {}
 
 std::shared_ptr<igasync::Promise<void>> Scheduler::Node::schedule(
-    entt::registry* world,
-    std::shared_ptr<igasync::ExecutionContext> main_thread,
-    std::shared_ptr<igasync::ExecutionContext> any_thread,
+    entt::registry* world, std::shared_ptr<igasync::TaskList> main_thread,
+    std::shared_ptr<igasync::TaskList> any_thread,
     profile::FrameProfiler* profiler) {
   auto system_id = system_id_;
   auto rsl = igasync::Promise<void>::Create();
-  std::shared_ptr<igasync::ExecutionContext> tl =
+  std::shared_ptr<igasync::TaskList> tl =
       main_thread_only_ ? main_thread : any_thread;
 
   auto profile_cb = [main_thread, profiler,
@@ -123,12 +126,12 @@ std::shared_ptr<igasync::Promise<void>> Scheduler::Node::schedule(
         profile));
   };
 
-  tl->schedule(igasync::Task::WithProfile(profile_cb, [this, world, rsl,
-                                                       any_thread,
-                                                       profile_cb]() {
-    auto wv = wv_decl_.create(world);
-    cb_(&wv, profile_cb)->on_resolve([rsl]() { rsl->resolve(); }, any_thread);
-  }));
+  tl->schedule(igasync::Task::WithProfile(
+      profile_cb, [this, world, rsl, main_thread, any_thread, profile_cb]() {
+        auto wv = wv_decl_.create(world);
+        cb_(&wv, main_thread, any_thread, profile_cb)
+            ->on_resolve([rsl]() { rsl->resolve(); }, any_thread);
+      }));
 
   return rsl;
 }
