@@ -72,7 +72,7 @@ std::optional<CtxAnimatedPbrPipeline> CtxAnimatedPbrPipeline::Create(
   rpd.vertex.buffers = vertex_buffer_layouts;
 
   wgpu::ColorTargetState color_target_state{};
-  color_target_state.format = wgpu::TextureFormat::RGBA32Float;
+  color_target_state.format = wgpu::TextureFormat::RGBA16Float;
 
   wgpu::FragmentState fs{};
   fs.module = shader_module;

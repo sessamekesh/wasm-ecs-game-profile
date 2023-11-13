@@ -24,7 +24,7 @@ void CtxGeneral3dBuffers::update_camera(
 void CtxGeneral3dBuffers::update_lighting(
     const wgpu::Queue& queue,
     const CtxAnimatedPbrPipeline::GPULightingParams& params) {
-  queue.WriteBuffer(cameraBuffer, 0, &params,
+  queue.WriteBuffer(lightingBuffer, 0, &params,
                     sizeof(CtxAnimatedPbrPipeline::GPULightingParams));
 }
 
@@ -37,7 +37,7 @@ CtxHdrPassOutput::CtxHdrPassOutput(const wgpu::Device& device, std::uint32_t w_,
       width(w_),
       height(h_) {
   wgpu::TextureDescriptor hdr_desc{};
-  hdr_desc.format = wgpu::TextureFormat::RGBA32Float;
+  hdr_desc.format = wgpu::TextureFormat::RGBA16Float;
   hdr_desc.dimension = wgpu::TextureDimension::e2D;
   hdr_desc.label = "igdemo-hdr-render-target";
   hdr_desc.mipLevelCount = 1;

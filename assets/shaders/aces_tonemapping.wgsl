@@ -22,12 +22,12 @@ fn aces_fitted(v: vec3f) -> vec3f {
 
 fn linear_to_srgb(color: vec3f) -> vec3f {
   let x = color * 12.92f;
-  let y = 1.055f * pow(saturate(color), 1. / 2.4) - 0.055;
+  let y = 1.055f * pow(saturate(color), vec3f(1. / 2.4)) - vec3f(0.055);
 
   var clr = color;
-  clr.r = color.r < 0.0031308f ? x.r : y.r;
-  clr.g = color.g < 0.0031308f ? x.g : y.g;
-  clr.b = color.b < 0.0031308f ? x.b : y.b;
+  clr.r = select(y.r, x.r, color.r < 0.0031308f);
+  clr.g = select(y.g, x.g, color.g < 0.0031308f);
+  clr.b = select(y.b, x.b, color.b < 0.0031308f);
   return clr;
 }
 
@@ -37,6 +37,7 @@ struct VertexInput {
 
 struct FragmentInput {
   @builtin(position) frag_coord: vec4f,
+  @location(0) uv: vec2f,
 }
 
 struct FragmentOutput {
@@ -50,6 +51,7 @@ struct FragmentOutput {
 fn vs(vertex: VertexInput) -> FragmentInput {
   var out: FragmentInput;
   out.frag_coord = vec4f(vertex.position, 1.0, 1.0);
+  out.uv = (vec2f(vertex.position.x, -vertex.position.y) + 1.) / 2.;
   return out;
 }
 
@@ -57,7 +59,7 @@ fn vs(vertex: VertexInput) -> FragmentInput {
 fn fs(frag: FragmentInput) -> FragmentOutput {
   var out: FragmentOutput;
 
-  let uv = (vec2f(frag.position.x, -frag.position.y) + 1.) / 2.;
+  let uv = frag.uv;
   let hdr_color = textureSample(hdrTexture, hdrSampler, uv);
 
   // Multiply by 1.8? Dunno, give it a go and see how it looks I guess.

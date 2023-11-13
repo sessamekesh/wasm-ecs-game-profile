@@ -55,8 +55,17 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(flatbuffers)
 
 # Digraph library, used for ECS scheduling verification
+FetchContent_Declare(
+    digraphlib
+    GIT_REPOSITORY "https://github.com/grame-cncm/digraph"
+    GIT_TAG "546d79637a904af17e2502d548ff403699c58aa6"
+)
+FetchContent_GetProperties(digraphlib)
+if (NOT digraphlib_POPULATED)
+  FetchContent_Populate(digraphlib)
+endif ()
 add_library(dglib INTERFACE)
-target_include_directories(dglib INTERFACE "digraph")
+target_include_directories(dglib INTERFACE ${digraphlib_SOURCE_DIR})
 
 # EnTT (Entity Component System library that powers core game logic)
 if (MSVC)

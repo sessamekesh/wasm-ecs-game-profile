@@ -1,8 +1,62 @@
+#include <igdemo/render/camera.h>
 #include <igdemo/render/ctx-components.h>
-#include <igdemo/render/pbr-geo-pass.h>
 #include <igdemo/render/world-transform-component.h>
+#include <igdemo/systems/pbr-geo-pass.h>
+
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace igdemo {
+
+const igecs::WorldView::Decl& PbrUploadSceneBuffersSystem::decl() {
+  static igecs::WorldView::Decl decl = igecs::WorldView::Decl()
+                                           // Define outside of system
+                                           .ctx_reads<CtxWgpuDevice>()
+                                           .ctx_reads<CtxGeneralSceneParams>()
+                                           .ctx_reads<CtxActiveCamera>()
+                                           .ctx_reads<CtxHdrPassOutput>()
+
+                                           // Defined inside of system
+                                           .ctx_writes<CtxSceneLightingParams>()
+                                           .ctx_writes<CtxGeneral3dBuffers>()
+
+                                           // Individual entity read
+                                           .reads<CameraComponent>();
+
+  return decl;
+}
+
+void PbrUploadSceneBuffersSystem::run(igecs::WorldView* wv) {
+  const auto& queue = wv->ctx<CtxWgpuDevice>().queue;
+  const auto& generalSceneParams = wv->ctx<CtxGeneralSceneParams>();
+  const auto& mainCameraEntity = wv->ctx<CtxActiveCamera>().activeCameraEntity;
+  const auto& ctxHdrPassOutput = wv->ctx<CtxHdrPassOutput>();
+  auto& sceneLightingParams = wv->mut_ctx<CtxSceneLightingParams>();
+  auto& general3dBuffers = wv->mut_ctx<CtxGeneral3dBuffers>();
+
+  const auto& mainCamera = wv->read<CameraComponent>(mainCameraEntity);
+
+  float aspect_ratio = static_cast<float>(ctxHdrPassOutput.width) /
+                       static_cast<float>(ctxHdrPassOutput.height);
+
+  glm::mat4 mat_view =
+      glm::lookAt(mainCamera.position, mainCamera.lookAt, mainCamera.up);
+  glm::mat4 mat_proj = glm::perspective(mainCamera.fovy, aspect_ratio,
+                                        mainCamera.nearPlaneDistance,
+                                        mainCamera.farPlaneDistance);
+
+  sceneLightingParams.cameraParams.cameraPos = mainCamera.position;
+  sceneLightingParams.cameraParams.matViewProj = mat_proj * mat_view;
+  sceneLightingParams.lightingParams.ambientCoefficient =
+      generalSceneParams.ambientCoefficient;
+  sceneLightingParams.lightingParams.sunColor = generalSceneParams.sunColor;
+  sceneLightingParams.lightingParams.sunDirection =
+      generalSceneParams.sunDirection;
+
+  // TODO (sessamekesh): These only need to update if changed, which can be
+  //  handled via an event firing? Optimize if needed.
+  general3dBuffers.update_camera(queue, sceneLightingParams.cameraParams);
+  general3dBuffers.update_lighting(queue, sceneLightingParams.lightingParams);
+}
 
 const igecs::WorldView::Decl& PbrUploadPerInstanceBuffersSystem::decl() {
   static igecs::WorldView::Decl decl = igecs::WorldView::Decl()
@@ -49,6 +103,7 @@ bool PbrGeoPassSystem::setup_animated(
   wv->attach_ctx<AnimatedPbrFrameBindGroup>(device, ctxPipeline.frame_bgl,
                                             generalBuffers.cameraBuffer,
                                             generalBuffers.lightingBuffer);
+  wv->attach_ctx<CtxSceneLightingParams>();
 
   return true;
 }
@@ -68,7 +123,7 @@ const igecs::WorldView::Decl& PbrGeoPassSystem::decl() {
 
           // COMPONENT ITERATORS
           .reads<AnimatedPbrInstance>()
-          .reads<SkinComponent>();
+          .reads<AnimatedPbrSkinBindGroup>();
 
   return decl;
 }

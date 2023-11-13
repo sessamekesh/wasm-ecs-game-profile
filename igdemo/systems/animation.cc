@@ -211,7 +211,8 @@ std::shared_ptr<igasync::Promise<void>> SampleOzzAnimationSystem::run(
         sampling_job.animation = &animationState.animation->animation;
         sampling_job.context = &ozzSamplingBuffer.samplingContext;
         sampling_job.output =
-            ozz::span(&ozzSamplingBuffer.animLocals[startChunk], ct);
+            ozz::span(&ozzSamplingBuffer.animLocals[startChunk],
+                      ozzSamplingBuffer.animLocals.size());
         sampling_job.ratio = (animationState.sample_time /
                               animationState.animation->animation.duration());
         sampling_job.Run();
@@ -314,6 +315,10 @@ TransformOzzAnimationToModelSpaceSystem::run(
             ozz::span(&ozzTransformationsBuffers.skeletonLocals[0],
                       ozzTransformationsBuffers.skeletonLocals.size());
         ras_job.Run();
+
+        // TODO (sessamekesh): This is failing, one of the quaternions is ending
+        //  up all zeros for some reason? My guess is a failure in above
+        //  remapping.
 
         // Job 2 - Local to model transformation (skeleton space)
         ozz::animation::LocalToModelJob ltm_job;

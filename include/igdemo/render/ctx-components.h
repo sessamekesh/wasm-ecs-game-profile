@@ -38,6 +38,12 @@ struct CtxHdrPassOutput {
   std::uint32_t height;
 };
 
+struct CtxGeneralSceneParams {
+  glm::vec3 sunDirection;
+  glm::vec3 sunColor;
+  float ambientCoefficient;
+};
+
 }  // namespace igdemo
 
 #endif

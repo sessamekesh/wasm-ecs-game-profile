@@ -1,12 +1,11 @@
-#ifndef IGDEMO_RENDER_TONEMAP_PASS_H
-#define IGDEMO_RENDER_TONEMAP_PASS_H
+#ifndef IGDEMO_SYSTEMS_LOCOMOTION_H
+#define IGDEMO_SYSTEMS_LOCOMOTION_H
 
 #include <igecs/world_view.h>
 
 namespace igdemo {
 
-class TonemapPass {
- public:
+struct LocomotionSystem {
   static const igecs::WorldView::Decl& decl();
   static void run(igecs::WorldView* wv);
 };

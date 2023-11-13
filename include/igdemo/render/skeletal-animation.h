@@ -13,7 +13,7 @@ namespace igdemo {
  * @brief Component that tracks animation state for an entity
  */
 struct AnimationStateComponent {
-  igasset::OzzAnimationWithNames* animation;
+  const igasset::OzzAnimationWithNames* animation;
   float sample_time;
   bool loop;
 };

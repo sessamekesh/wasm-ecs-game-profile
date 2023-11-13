@@ -128,9 +128,14 @@ std::shared_ptr<igasync::Promise<void>> Scheduler::Node::schedule(
 
   tl->schedule(igasync::Task::WithProfile(
       profile_cb, [this, world, rsl, main_thread, any_thread, profile_cb]() {
-        auto wv = wv_decl_.create(world);
-        cb_(&wv, main_thread, any_thread, profile_cb)
-            ->on_resolve([rsl]() { rsl->resolve(); }, any_thread);
+        auto wv = new igecs::WorldView(wv_decl_.create(world));
+        cb_(wv, main_thread, any_thread, profile_cb)
+            ->on_resolve(
+                [rsl, wv]() {
+                  rsl->resolve();
+                  delete wv;
+                },
+                any_thread);
       }));
 
   return rsl;

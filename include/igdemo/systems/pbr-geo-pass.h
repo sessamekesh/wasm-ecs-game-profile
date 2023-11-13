@@ -1,5 +1,5 @@
-#ifndef IGDEMO_RENDER_PBR_GEO_PASS_H
-#define IGDEMO_RENDER_PBR_GEO_PASS_H
+#ifndef IGDEMO_SYSTEMS_PBR_GEO_PASS_H
+#define IGDEMO_SYSTEMS_PBR_GEO_PASS_H
 
 #include <igdemo/render/animated-pbr.h>
 #include <igecs/world_view.h>
@@ -9,6 +9,12 @@ namespace igdemo {
 struct CtxSceneLightingParams {
   CtxAnimatedPbrPipeline::GPULightingParams lightingParams;
   CtxAnimatedPbrPipeline::GPUCameraParams cameraParams;
+};
+
+class PbrUploadSceneBuffersSystem {
+ public:
+  static const igecs::WorldView::Decl& decl();
+  static void run(igecs::WorldView* wv);
 };
 
 class PbrUploadPerInstanceBuffersSystem {

@@ -119,8 +119,8 @@ struct AnimatedPbrSkinBindGroup {
 };
 
 struct AnimatedPbrInstance {
-  AnimatedPbrMaterial* material;
-  AnimatedPbrGeometry* geometry;
+  const AnimatedPbrMaterial* material;
+  const AnimatedPbrGeometry* geometry;
 };
 
 }  // namespace igdemo

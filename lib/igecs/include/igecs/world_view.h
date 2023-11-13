@@ -374,7 +374,7 @@ class WorldView {
   }
 
   template <typename ComponentT, typename... Args>
-  ComponentT& attach(entt::entity e, Args&&... args) {
+  decltype(auto) attach(entt::entity e, Args&&... args) {
 #ifdef IG_ENABLE_ECS_VALIDATION
     ::assert_and_print<ComponentT>(decl_.can_write<ComponentT>(), "attach");
     write_types_.insert(CttiTypeId::of<ComponentT>());

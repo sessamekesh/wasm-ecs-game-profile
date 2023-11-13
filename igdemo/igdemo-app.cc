@@ -2,11 +2,33 @@
 #include <igdemo/assets/core-shaders.h>
 #include <igdemo/assets/ybot.h>
 #include <igdemo/igdemo-app.h>
+#include <igdemo/logic/enemy.h>
 #include <igdemo/logic/framecommon.h>
+#include <igdemo/render/camera.h>
 #include <igdemo/render/ctx-components.h>
-#include <igdemo/render/pbr-geo-pass.h>
 #include <igdemo/scheduler.h>
 #include <igdemo/systems/animation.h>
+#include <igdemo/systems/pbr-geo-pass.h>
+
+namespace {
+
+void create_main_camera(igecs::WorldView* wv) {
+  auto e = wv->create();
+  wv->attach<igdemo::CameraComponent>(
+      e, igdemo::CameraComponent{/* position */
+                                 glm::vec3(0.f, 2.f, -4.f),
+                                 /* lookAt */
+                                 glm::vec3(0.f, 0.f, 0.f),
+                                 /* up */
+                                 glm::vec3(0.f, 1.f, 0.f),
+                                 /* fovy */
+                                 glm::radians(85.f),
+                                 /* nearPlane + farPlane */
+                                 0.01f, 100.f});
+  wv->attach_ctx<igdemo::CtxActiveCamera>(igdemo::CtxActiveCamera{e});
+}
+
+}  // namespace
 
 namespace igdemo {
 
@@ -27,24 +49,34 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
   wv.attach_ctx<CtxGeneral3dBuffers>(app_base->Device, app_base->Queue);
   init_animation_systems(&wv);
   wv.attach_ctx<CtxFrameTime>();
-  // TODO (sessamekesh): Initialize CtxSceneLightingParams
-  // TODO (sessamekesh): System that updates CtxSceneLightingParams view-proj
-  //  based on the position / movement of a logical camera
-  // TODO (sessamekesh): Initialize CtxHdrPassOutput
+  ::create_main_camera(&wv);
+  wv.attach_ctx<CtxGeneralSceneParams>(
+      CtxGeneralSceneParams{/* sunDirection */ glm::vec3(1.f, -8.f, -1.f),
+                            /* sunColor */ glm::vec3(1.f, 1.f, 1.f),
+                            /* ambientCoefficient */ 0.25f});
+  wv.attach_ctx<CtxHdrPassOutput>(app_base->Device, app_base->Width,
+                                  app_base->Height);
+
+  // Setup logical level state...
+  // TODO (sessamekesh): Generate from config
+  auto enemy = enemy::create_enemy_entity(&wv, glm::vec2(0.f, 0.f));
 
   // Load stuff from the network and initialize resources...
   auto combiner = igasync::PromiseCombiner::Create();
+
+  auto shaders_promise = load_core_shaders(
+      proc_table, registry.get(), "resources/", app_base->Device,
+      app_base->Queue, app_base->preferred_swap_chain_texture_format(),
+      main_thread_tasks, async_tasks);
+
   auto ybot_load_errors_key = combiner->add(
-      load_ybot_resources(proc_table, registry.get(), "resources/",
-                          app_base->Device, app_base->Queue, main_thread_tasks,
-                          async_tasks),
+      load_ybot_resources(
+          proc_table, registry.get(), "resources/", app_base->Device,
+          app_base->Queue, main_thread_tasks, async_tasks,
+          shaders_promise->then([](const auto&) {}, async_tasks)),
       async_tasks);
 
-  auto shaders_load_errorskey =
-      combiner->add(load_core_shaders(proc_table, registry.get(), "resources/",
-                                      app_base->Device, app_base->Queue,
-                                      main_thread_tasks, async_tasks),
-                    async_tasks);
+  auto shaders_load_errorskey = combiner->add(shaders_promise, async_tasks);
 
   auto frame_execution_graph_key = combiner->add_consuming(
       main_thread_tasks->run(build_update_and_render_scheduler,

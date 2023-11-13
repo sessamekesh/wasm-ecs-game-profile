@@ -15,9 +15,9 @@ struct WorldTransformComponent {
 
 struct SkinComponent {
   // References to a piece of geometry externally (e.g. AnimatedPbrGeomety)
-  std::vector<std::string>* boneNames;
-  std::vector<glm::mat4>* invBindPoses;
-  ozz::animation::Skeleton* skeleton;
+  const std::vector<std::string>* boneNames;
+  const std::vector<glm::mat4>* invBindPoses;
+  const ozz::animation::Skeleton* skeleton;
 
   std::vector<glm::mat4> skin;
 };

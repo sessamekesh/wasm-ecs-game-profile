@@ -1,7 +1,10 @@
-#include <igdemo/render/pbr-geo-pass.h>
-#include <igdemo/render/tonemap-pass.h>
+#include <igdemo/logic/locomotion.h>
 #include <igdemo/scheduler.h>
 #include <igdemo/systems/animation.h>
+#include <igdemo/systems/attach-renderables.h>
+#include <igdemo/systems/locomotion.h>
+#include <igdemo/systems/pbr-geo-pass.h>
+#include <igdemo/systems/tonemap-pass.h>
 
 namespace igdemo {
 
@@ -25,8 +28,19 @@ igecs::Scheduler build_update_and_render_scheduler(
   // TODO (sessamekesh): HDR render pass system
   // TODO (sessamekesh): Finish implementation of tonemapping pass
 
-  auto advance_animation_time =
-      builder.add_node().build<AdvanceAnimationTimeSystem>();
+  auto locomotion = builder.add_node().build<LocomotionSystem>();
+
+  // This system serves as the transition between LOGICAL updates and
+  //  RENDER updates - it attaches appropriate render resources to
+  //  accompany the matching logic resources.
+  auto attach_renderables = builder.add_node()
+                                .main_thread_only()
+                                .depends_on(locomotion)
+                                .build<AttachRenderablesSystem>();
+
+  auto advance_animation_time = builder.add_node()
+                                    .depends_on(attach_renderables)
+                                    .build<AdvanceAnimationTimeSystem>();
 
   auto sample_ozz_animation = builder.add_node()
                                   .depends_on(advance_animation_time)
@@ -37,15 +51,23 @@ igecs::Scheduler build_update_and_render_scheduler(
           .depends_on(sample_ozz_animation)
           .build<TransformOzzAnimationToModelSpaceSystem>();
 
-  auto pbr_upload_buffers =
+  auto pbr_upload_scene_buffers =
       builder.add_node()
           .main_thread_only()
+          // TODO (sessamekesh): .depends_on update camera system
+          .build<PbrUploadSceneBuffersSystem>();
+
+  auto pbr_upload_instance_buffers =
+      builder.add_node()
+          .main_thread_only()
+          .depends_on(locomotion)
           .depends_on(transform_ozz_animation_to_model_space)
           .build<PbrUploadPerInstanceBuffersSystem>();
 
   auto pbr_geo_pass = builder.add_node()
                           .main_thread_only()
-                          .depends_on(pbr_upload_buffers)
+                          .depends_on(pbr_upload_scene_buffers)
+                          .depends_on(pbr_upload_instance_buffers)
                           .build<PbrGeoPassSystem>();
 
   auto tonemapping_pass = builder.add_node()

@@ -91,23 +91,21 @@ int main(int argc, char** argv) {
     std::string fname = (profile_out_dir + "/" +
                          (profile_prefix + std::to_string(profile_id))) +
                         ".json";
-    std::async(std::launch::async,
-               [fname = std::move(fname), json = std::move(json)]() {
-                 std::ofstream fout(fname);
-                 if (!fout) {
-                   std::cerr << "Could not write to " << fname
-                             << " - profile not written" << std::endl;
-                   return;
-                 }
+    std::thread([fname = std::move(fname), json = std::move(json)]() {
+      std::ofstream fout(fname);
+      if (!fout) {
+        std::cerr << "Could not write to " << fname << " - profile not written"
+                  << std::endl;
+        return;
+      }
 
-                 fout << json;
-               });
+      fout << json;
+    }).detach();
   };
   proc_table.loadFileCb = [](std::string file_path) {
     auto rsl = igasync::Promise<
         std::variant<std::string, igdemo::FileReadError>>::Create();
-    std::async(
-        std::launch::async,
+    std::thread(
         [rsl](std::string path) {
           if (!std::filesystem::exists(path)) {
             rsl->resolve(igdemo::FileReadError::FileNotFound);
@@ -130,7 +128,8 @@ int main(int argc, char** argv) {
 
           rsl->resolve(std::move(data));
         },
-        file_path);
+        file_path)
+        .detach();
     return rsl;
   };
 
