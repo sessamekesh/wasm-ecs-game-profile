@@ -29,6 +29,7 @@ include(cmake/gen_igpack.cmake)
 #
 set(igdemo_includes
   "include/igdemo/assets/core-shaders.h"
+  "include/igdemo/assets/skybox.h"
   "include/igdemo/assets/ybot.h"
   "include/igdemo/logic/combat.h"
   "include/igdemo/logic/enemy.h"
@@ -52,6 +53,7 @@ set(igdemo_includes
 
 set(igdemo_sources
   "igdemo/assets/core-shaders.cc"
+  "igdemo/assets/skybox.cc"
   "igdemo/assets/ybot.cc"
   "igdemo/logic/enemy.cc"
   "igdemo/render/processing/equirect-to-cubemap.cc"
@@ -109,7 +111,6 @@ BUILD_IG_ASSET_PACK_PLAN(
     INFILES
       "shaders/aces_tonemapping.wgsl"
       "shaders/animated_pbr.wgsl"
-      "shaders/equirect_to_cubemap.wgsl"
     TARGET_OUTPUT_FILES
       "resources/shaders.igpack")
 
@@ -118,6 +119,7 @@ BUILD_IG_ASSET_PACK_PLAN(
     PLAN assets/skybox.igpack-plan.json
     INDIR assets
     INFILES
+      "shaders/equirect_to_cubemap.wgsl"
       "industrial_sunset_02_puresky_2k.hdr"
     TARGET_OUTPUT_FILES
       "resources/skybox.igpack")

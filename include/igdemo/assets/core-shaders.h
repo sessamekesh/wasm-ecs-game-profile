@@ -18,6 +18,6 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_core_shaders(
     std::shared_ptr<igasync::ExecutionContext> main_thread_tasks,
     std::shared_ptr<igasync::ExecutionContext> compute_tasks);
 
-}
+}  // namespace igdemo
 
 #endif

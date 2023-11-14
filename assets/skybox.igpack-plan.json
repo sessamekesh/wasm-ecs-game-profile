@@ -2,6 +2,16 @@
   "output_path": "resources/skybox.igpack",
   "actions": [
     {
+      "igasset_name": "equirectToCubemapWgsl",
+      "action_type": "CopyWgslSourceAction",
+      "action": {
+        "input_file_path": "shaders/equirect_to_cubemap.wgsl",
+        "vertex_entry_point": "vs",
+        "fragment_entry_point": "fs",
+        "strip_comments": false
+      }
+    },
+    {
       "igasset_name": "sunset-skybox-hdr",
       "action_type": "EncodeRawHdrFile",
       "action": {

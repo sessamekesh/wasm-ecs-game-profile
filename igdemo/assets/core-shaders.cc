@@ -2,6 +2,7 @@
 #include <igasync/promise_combiner.h>
 #include <igdemo/assets/core-shaders.h>
 #include <igdemo/render/animated-pbr.h>
+#include <igdemo/render/processing/equirect-to-cubemap.h>
 #include <igdemo/systems/pbr-geo-pass.h>
 #include <igdemo/systems/tonemap-pass.h>
 
