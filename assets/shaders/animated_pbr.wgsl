@@ -120,7 +120,7 @@ fn fs(frag: VertexOutput) -> @location(0) vec4f {
   let V = normalize(camera_position - frag.world_pos);
   let R = reflect(-V, N);
 
-  let base_albedo = colorParams.albedo;
+  let base_albedo = pow(colorParams.albedo, vec3f(2.2));
   let base_metal = colorParams.metallic;
   let base_roughness = colorParams.roughness;
 

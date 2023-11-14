@@ -52,8 +52,8 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
   ::create_main_camera(&wv);
   wv.attach_ctx<CtxGeneralSceneParams>(
       CtxGeneralSceneParams{/* sunDirection */ glm::vec3(1.f, -4.f, 1.f),
-                            /* sunColor */ glm::vec3(100.f, 100.f, 100.f),
-                            /* ambientCoefficient */ 0.000001f});
+                            /* sunColor */ glm::vec3(10.f, 10.f, 10.f),
+                            /* ambientCoefficient */ 0.0001f});
   wv.attach_ctx<CtxHdrPassOutput>(app_base->Device, app_base->Width,
                                   app_base->Height);
 
