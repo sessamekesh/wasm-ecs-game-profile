@@ -83,6 +83,15 @@ bool PlanExecutor::execute_plan(const PlanInvocationDesc& plan) {
           return false;
         }
         break;
+      case IgpackGen::SingleActionData_EncodeRawHdrFile:
+        if (!process_hdr_image(plan.InputAssetPathRoot, fbb, assets,
+                               action->action_as_EncodeRawHdrFile(),
+                               action->igasset_name()->str())) {
+          std::cerr << "Failed to process EncodeRawHdrFile for "
+                    << action->igasset_name()->str() << std::endl;
+          return false;
+        }
+        break;
       default:
         std::clog << "Unsupported action type found ("
                   << IgpackGen::EnumNameSingleActionData(action->action_type())
@@ -173,4 +182,19 @@ bool PlanExecutor::process_assimp_to_ozz_animation(
   }
   return assimp_animation_.export_animation(fbb, assets, *action, igasset_name,
                                             file_data);
+}
+
+bool PlanExecutor::process_hdr_image(
+    const std::filesystem::path& input_path_root,
+    flatbuffers::FlatBufferBuilder& fbb,
+    std::vector<flatbuffers::Offset<IgAsset::SingleAsset>>& assets,
+    const IgpackGen::EncodeRawHdrFile* action, std::string igasset_name) {
+  std::string file_data;
+  if (!read_file(input_path_root, action->input_file_path()->str(),
+                 file_data)) {
+    return false;
+  }
+
+  return hdr_image_.export_raw_hdr(fbb, assets, *action, igasset_name,
+                                   file_data);
 }

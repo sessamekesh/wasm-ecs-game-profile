@@ -35,6 +35,7 @@ set(igdemo_includes
   "include/igdemo/logic/framecommon.h"
   "include/igdemo/logic/locomotion.h"
   "include/igdemo/logic/renderable.h"
+  "include/igdemo/render/processing/equirect-to-cubemap.h"
   "include/igdemo/render/animated-pbr.h"
   "include/igdemo/render/camera.h"
   "include/igdemo/render/ctx-components.h"
@@ -53,6 +54,7 @@ set(igdemo_sources
   "igdemo/assets/core-shaders.cc"
   "igdemo/assets/ybot.cc"
   "igdemo/logic/enemy.cc"
+  "igdemo/render/processing/equirect-to-cubemap.cc"
   "igdemo/render/animated-pbr.cc"
   "igdemo/render/ctx-components.cc"
   "igdemo/render/wgpu-helpers.cc"
@@ -107,8 +109,18 @@ BUILD_IG_ASSET_PACK_PLAN(
     INFILES
       "shaders/aces_tonemapping.wgsl"
       "shaders/animated_pbr.wgsl"
+      "shaders/equirect_to_cubemap.wgsl"
     TARGET_OUTPUT_FILES
       "resources/shaders.igpack")
 
+BUILD_IG_ASSET_PACK_PLAN(
+    TARGET_NAME igp-skybox
+    PLAN assets/skybox.igpack-plan.json
+    INDIR assets
+    INFILES
+      "industrial_sunset_02_puresky_2k.hdr"
+    TARGET_OUTPUT_FILES
+      "resources/skybox.igpack")
+
 add_dependencies(igdemo
-  igp-ybot igp-shaders)
+  igp-ybot igp-shaders igp-skybox)

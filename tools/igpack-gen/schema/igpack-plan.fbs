@@ -40,11 +40,16 @@ table AssimpExtractOzzAnimation {
   animation_name: string;
 }
 
+table EncodeRawHdrFile {
+  input_file_path: string;
+}
+
 union SingleActionData {
   CopyWgslSourceAction,
   AssimpToDracoAction,
   AssimpExtractOzzSkeleton,
-  AssimpExtractOzzAnimation
+  AssimpExtractOzzAnimation,
+  EncodeRawHdrFile
 }
 
 table SingleAction {

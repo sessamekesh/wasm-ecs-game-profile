@@ -112,6 +112,12 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(ozz-animation)
 
+# STB image library (https://github.com/nothings/stb)
+# Some adjustments have been made to make it a bit more friendly to use
+add_library(stb-image "stb/include/stb/stb_image.h" "stb/stb_image_impl.cc")
+set_target_properties(stb-image PROPERTIES CXX_STANDARD 20)
+target_include_directories(stb-image PUBLIC stb/include)
+
 # Emscripten setup (make sure to build with correct compiler flags for final output binary)
 if (EMSCRIPTEN)
   set_wasm_target_properties(TARGET_NAME igasync)

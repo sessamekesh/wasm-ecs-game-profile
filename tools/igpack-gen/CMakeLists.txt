@@ -7,6 +7,7 @@ set(igpack-gen-headers
   "include/igpack-gen/assimp-animation-processor.h"
   "include/igpack-gen/assimp-geo-processor.h"
   "include/igpack-gen/assimp-util.h"
+  "include/igpack-gen/hdr-image.h"
   "include/igpack-gen/plan-executor.h"
   "include/igpack-gen/wgsl-processor.h")
 
@@ -14,6 +15,7 @@ set(igpack-gen-src
   "src/assimp-animation-processor.cc"
   "src/assimp-geo-processor.cc"
   "src/assimp-util.cc"
+  "src/hdr-image.cc"
   "src/plan-executor.cc"
   "src/wgsl-processor.cc"
   "main.cc")

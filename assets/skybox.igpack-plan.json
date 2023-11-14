@@ -1,0 +1,12 @@
+{
+  "output_path": "resources/skybox.igpack",
+  "actions": [
+    {
+      "igasset_name": "sunset-skybox-hdr",
+      "action_type": "EncodeRawHdrFile",
+      "action": {
+        "input_file_path": "industrial_sunset_02_puresky_2k.hdr"
+      }
+    }
+  ]
+}

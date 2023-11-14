@@ -3,6 +3,7 @@
 
 #include <igpack-gen/assimp-animation-processor.h>
 #include <igpack-gen/assimp-geo-processor.h>
+#include <igpack-gen/hdr-image.h>
 #include <igpack-gen/schema/igpack-plan.h>
 #include <igpack-gen/wgsl-processor.h>
 
@@ -43,11 +44,17 @@ class PlanExecutor {
       std::vector<flatbuffers::Offset<IgAsset::SingleAsset>>& assets,
       const IgpackGen::AssimpExtractOzzAnimation* action,
       std::string igasset_name);
+  bool process_hdr_image(
+      const std::filesystem::path& input_path_root,
+      flatbuffers::FlatBufferBuilder& fbb,
+      std::vector<flatbuffers::Offset<IgAsset::SingleAsset>>& assets,
+      const IgpackGen::EncodeRawHdrFile* action, std::string igasset_name);
 
  private:
   WgslProcessor wgsl_;
   AssimpGeoProcessor assimp_geo_;
   AssimpAnimationProcessor assimp_animation_;
+  HdrImageProcessor hdr_image_;
 };
 
 }  // namespace igpackgen

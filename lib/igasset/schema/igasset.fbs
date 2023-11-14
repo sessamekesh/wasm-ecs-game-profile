@@ -39,13 +39,18 @@ table OzzAnimation {
   bone_names: [string];
 }
 
+table HdrRaw {
+  bin: [ubyte];
+}
+
 // TODO (sessamekesh): Fmod sound bank asset
 
 union SingleAssetData {
   DracoGeometry,
   WgslSource,
   OzzSkeleton,
-  OzzAnimation
+  OzzAnimation,
+  HdrRaw
 }
 
 table SingleAsset {
