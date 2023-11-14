@@ -1,5 +1,6 @@
 #include <igasync/promise_combiner.h>
 #include <igdemo/assets/core-shaders.h>
+#include <igdemo/assets/skybox.h>
 #include <igdemo/assets/ybot.h>
 #include <igdemo/igdemo-app.h>
 #include <igdemo/logic/enemy.h>
@@ -70,15 +71,17 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
       proc_table, registry.get(), "resources/", app_base->Device,
       app_base->Queue, app_base->preferred_swap_chain_texture_format(),
       main_thread_tasks, async_tasks);
-
   auto ybot_load_errors_key = combiner->add(
       load_ybot_resources(
           proc_table, registry.get(), "resources/", app_base->Device,
           app_base->Queue, main_thread_tasks, async_tasks,
           shaders_promise->then([](const auto&) {}, async_tasks)),
       async_tasks);
-
   auto shaders_load_errorskey = combiner->add(shaders_promise, async_tasks);
+  auto skybox_load_errorskey = combiner->add(
+      load_skybox(proc_table, registry.get(), "resources/", app_base->Device,
+                  app_base->Queue, main_thread_tasks, async_tasks),
+      async_tasks);
 
   auto frame_execution_graph_key = combiner->add_consuming(
       main_thread_tasks->run(build_update_and_render_scheduler,
@@ -94,11 +97,14 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
 
   return combiner->combine(
       [config, proc_table, reg_promise_key, ybot_load_errors_key,
-       shaders_load_errorskey, frame_execution_graph_key, app_base,
-       main_thread_tasks, async_tasks](igasync::PromiseCombiner::Result rsl)
+       shaders_load_errorskey, skybox_load_errorskey, frame_execution_graph_key,
+       app_base, main_thread_tasks,
+       async_tasks](igasync::PromiseCombiner::Result rsl)
           -> std::variant<std::unique_ptr<IgdemoApp>, IgdemoLoadError> {
         auto frame_execution_graph = rsl.move(frame_execution_graph_key);
         auto registry = rsl.move(reg_promise_key);
+
+        // TODO (sessamekesh): error handling
 
         return std::unique_ptr<IgdemoApp>(
             new IgdemoApp(config, proc_table, std::move(registry),

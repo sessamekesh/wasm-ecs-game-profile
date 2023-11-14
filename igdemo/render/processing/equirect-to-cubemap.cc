@@ -12,6 +12,15 @@ EquirectangularToCubemapPipeline EquirectangularToCubemapPipeline::Create(
       create_shader_module(device, wgsl_source->source()->str(),
                            "equirectangular-to-cubemap-shader");
 
+  wgpu::VertexAttribute pos{};
+  pos.format = wgpu::VertexFormat::Float32x3;
+  pos.offset = 0;
+  pos.shaderLocation = 0;
+  wgpu::VertexBufferLayout vbl{};
+  vbl.arrayStride = sizeof(glm::vec3);
+  vbl.attributeCount = 1;
+  vbl.attributes = &pos;
+
   wgpu::ColorTargetState color_target_state{};
   color_target_state.format = wgpu::TextureFormat::RGBA16Float;
 
@@ -26,6 +35,8 @@ EquirectangularToCubemapPipeline EquirectangularToCubemapPipeline::Create(
   rpd.vertex.buffers = nullptr;
   rpd.vertex.entryPoint = wgsl_source->vertex_entry_point()->c_str();
   rpd.vertex.module = shader_module;
+  rpd.vertex.bufferCount = 1;
+  rpd.vertex.buffers = &vbl;
   rpd.label = "equirectangular-to-cubemap-pipeline";
   rpd.fragment = &fs;
   rpd.primitive.topology = wgpu::PrimitiveTopology::TriangleList;
@@ -41,8 +52,9 @@ EquirectangularToCubemapPipeline EquirectangularToCubemapPipeline::Create(
 
 ConversionOutput EquirectangularToCubemapPipeline::convert(
     const wgpu::Device& device, const wgpu::Queue& queue,
-    const wgpu::TextureView& equirect, std::uint32_t cubemap_face_width,
-    wgpu::TextureUsage usage, const char* label) {
+    const wgpu::TextureView& equirect, const CubemapUnitCube& unit_cube,
+    std::uint32_t cubemap_face_width, wgpu::TextureUsage usage,
+    const char* label) const {
   wgpu::TextureDescriptor cubemap_desc{};
   cubemap_desc.dimension = wgpu::TextureDimension::e2D;
   cubemap_desc.format = wgpu::TextureFormat::RGBA16Float;
@@ -159,11 +171,15 @@ ConversionOutput EquirectangularToCubemapPipeline::convert(
   sbgd.entryCount = 2;
   wgpu::BindGroup sbg = device.CreateBindGroup(&sbgd);
 
+  const auto& ucvb = unit_cube.vertexBuffer;
+  int ucnv = unit_cube.numVertices;
+
   wgpu::RenderPassEncoder pxp = encoder.BeginRenderPass(&pxrpd);
   pxp.SetPipeline(pipeline_);
   pxp.SetBindGroup(0, mvpBg);
   pxp.SetBindGroup(1, sbg);
-  pxp.Draw(6, 1, 0, 0);
+  pxp.SetVertexBuffer(0, ucvb.buffer, 0, ucvb.size);
+  pxp.Draw(ucnv, 1, 0, 0);
   pxp.End();
 
   mvp = captureProjection * captureViews[1];
@@ -172,7 +188,8 @@ ConversionOutput EquirectangularToCubemapPipeline::convert(
   nxp.SetPipeline(pipeline_);
   nxp.SetBindGroup(0, mvpBg);
   nxp.SetBindGroup(1, sbg);
-  nxp.Draw(6, 1, 0, 0);
+  pxp.SetVertexBuffer(0, ucvb.buffer, 0, ucvb.size);
+  pxp.Draw(ucnv, 1, 0, 0);
   nxp.End();
 
   mvp = captureProjection * captureViews[2];
@@ -181,7 +198,7 @@ ConversionOutput EquirectangularToCubemapPipeline::convert(
   pyp.SetPipeline(pipeline_);
   pyp.SetBindGroup(0, mvpBg);
   pyp.SetBindGroup(1, sbg);
-  pyp.Draw(6, 1, 0, 0);
+  pxp.Draw(ucnv, 1, 0, 0);
   pyp.End();
 
   mvp = captureProjection * captureViews[3];
@@ -190,7 +207,8 @@ ConversionOutput EquirectangularToCubemapPipeline::convert(
   nyp.SetPipeline(pipeline_);
   nyp.SetBindGroup(0, mvpBg);
   nyp.SetBindGroup(1, sbg);
-  nyp.Draw(6, 1, 0, 0);
+  pxp.SetVertexBuffer(0, ucvb.buffer, 0, ucvb.size);
+  pxp.Draw(ucnv, 1, 0, 0);
   nyp.End();
 
   mvp = captureProjection * captureViews[4];
@@ -199,7 +217,8 @@ ConversionOutput EquirectangularToCubemapPipeline::convert(
   pzp.SetPipeline(pipeline_);
   pzp.SetBindGroup(0, mvpBg);
   pzp.SetBindGroup(1, sbg);
-  pzp.Draw(6, 1, 0, 0);
+  pxp.SetVertexBuffer(0, ucvb.buffer, 0, ucvb.size);
+  pxp.Draw(ucnv, 1, 0, 0);
   pzp.End();
 
   mvp = captureProjection * captureViews[5];
@@ -208,7 +227,8 @@ ConversionOutput EquirectangularToCubemapPipeline::convert(
   nzp.SetPipeline(pipeline_);
   nzp.SetBindGroup(0, mvpBg);
   nzp.SetBindGroup(1, sbg);
-  nzp.Draw(6, 1, 0, 0);
+  pxp.SetVertexBuffer(0, ucvb.buffer, 0, ucvb.size);
+  pxp.Draw(ucnv, 1, 0, 0);
   nzp.End();
 
   wgpu::CommandBuffer commands = encoder.Finish();

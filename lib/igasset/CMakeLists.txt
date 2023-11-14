@@ -3,12 +3,14 @@ set(igasset_headers
   "include/igasset/igpack_decoder.h"
   "include/igasset/ozz_jobs.h"
   "include/igasset/ozz_wrappers.h"
+  "include/igasset/raw_hdr.h"
   "include/igasset/vertex_types.h")
 
 set(igasset_sources
   "src/draco_dec.cc"
   "src/igpack_decoder.cc"
-  "src/ozz_jobs.cc")
+  "src/ozz_jobs.cc"
+  "src/raw_hdr.cc")
 
 gen_flatbuffer_cpp(
 	TARGET_NAME igasset_schema
@@ -21,7 +23,8 @@ target_include_directories(igasset PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories(igasset PUBLIC
 	"${CMAKE_BINARY_DIR}"
 	"${draco_SOURCE_DIR}/src")
-target_link_libraries(igasset PUBLIC draco_lib igasset_schema glm ozz_animation ozz_geometry)
+target_link_libraries(igasset PUBLIC igasset_schema glm ozz_animation ozz_geometry float16t)
+target_link_libraries(igasset PRIVATE stb-image draco_lib)
 
 if (EMSCRIPTEN)
   set_wasm_target_properties(TARGET_NAME igasset)

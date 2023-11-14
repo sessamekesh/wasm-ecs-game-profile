@@ -3,6 +3,7 @@
 
 #include <igasset/draco_dec.h>
 #include <igasset/ozz_wrappers.h>
+#include <igasset/raw_hdr.h>
 #include <igasset/schema/igasset.h>
 #include <ozz/animation/runtime/animation.h>
 #include <ozz/animation/runtime/skeleton.h>
@@ -41,24 +42,8 @@ class IgpackDecoder {
   std::variant<OzzAnimationWithNames, IgpackExtractError> extract_ozz_animation(
       const std::string& asset_name) const;
 
-  // TODO (sessamekesh): extract OZZ skeletons and animations
-  // NOTICE: Bone names in skeletons are not necessarily in line with
-  //  animation channels! This is a feature of igpack-loader, and
-  //  possibly a stupid one that should be re-thought to push work
-  //  to the asset pipeline packing stage instead of runtime loading.
-  // It may or may not be feasible to unpack skeletons/animations here.
-  // It's totally feasible, do something like this:
-  // https://github.com/guillaumeblanc/ozz-animation/blob/feature/magic/samples/additive/sample_additive.cc#L163-L175
-  // Basically...
-  //  - Sample the animation as normal with ozz::animation::SamplingJob
-  //  - Remap from animation to skeleton index space
-  //  - Obtain skeleton LTM transforms with ozz::animation::LocalToModelJob
-  //  - Remap from skeleton to model index space
-  //  - Upload to GPU
-  // Remapping should be _fairly_ efficient, but it is unnecessary work
-  //  if everything was all in the same index space to begin with.
-  // As long as there isn't crazy animation CPU load (profile!) this isn't
-  //  worth updating for this specific game (marketable-plushies-game).
+  std::variant<RawHdr, IgpackExtractError> extract_raw_hdr(
+      const std::string& asset_name) const;
 
  private:
   IgpackDecoder(std::string raw_data)

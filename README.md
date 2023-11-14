@@ -91,6 +91,7 @@ Thank you so much for the work of others in the community who build and maintain
 * [CLI11](https://github.com/CLIUtils/CLI11) - CLI argument handling library, useful especially for tooling
 * [Ozz Animation](https://github.com/guillaumeblanc/ozz-animation) - Excellent WASM-friendly 3D skeletal animation library
 * [nlohmann/json](https://github.com/nlohmann/json) - JSON library for C++ with a wonderfully developer-friendly API
+* [float16_t](https://github.com/fengwang/float16_t) - Half-precision floating point implementation, useful for loading HDR images
 
 I also use a couple of libraries that I've authored for independent use.
 They're mature enough to publish, not quite mature enough to be considered production-ready,

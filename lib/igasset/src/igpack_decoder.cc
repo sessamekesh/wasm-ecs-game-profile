@@ -1,6 +1,7 @@
 #include <igasset/igpack_decoder.h>
 #include <ozz/base/io/archive.h>
 #include <ozz/base/io/stream.h>
+#include <stb/stb_image.h>
 
 namespace {
 
@@ -174,6 +175,48 @@ IgpackDecoder::extract_ozz_animation(const std::string& asset_name) const {
 
     return OzzAnimationWithNames{std::move(animation),
                                  std::move(animation_bone_names)};
+  }
+
+  return IgpackExtractError::ResourceNotFound;
+}
+
+std::variant<RawHdr, IgpackExtractError> IgpackDecoder::extract_raw_hdr(
+    const std::string& asset_name) const {
+  for (int i = 0; i < asset_pack_->assets()->size(); i++) {
+    const auto* asset = asset_pack_->assets()->Get(i);
+    if (asset->name()->str() != asset_name) {
+      continue;
+    }
+
+    if (asset->data_type() != IgAsset::SingleAssetData_HdrRaw) {
+      return IgpackExtractError::WrongResourceType;
+    }
+
+    const auto* hdr_raw_fb = asset->data_as_HdrRaw();
+
+    if (stbi_is_hdr_from_memory(hdr_raw_fb->bin()->data(),
+                                hdr_raw_fb->bin()->size()) == 0) {
+      return IgpackExtractError::MalformedResourceData;
+    }
+
+    int width, height, num_channels;
+    float* data = stbi_loadf_from_memory(hdr_raw_fb->bin()->data(),
+                                         hdr_raw_fb->bin()->size(), &width,
+                                         &height, &num_channels, 4);
+
+    if (!data) {
+      return IgpackExtractError::MalformedResourceData;
+    }
+
+    if (num_channels != 4 || width < 1 || height < 1) {
+      stbi_image_free(data);
+      return IgpackExtractError::MalformedResourceData;
+    }
+
+    RawHdr hdr(data, width, height, num_channels);
+    stbi_image_free(data);
+
+    return hdr;
   }
 
   return IgpackExtractError::ResourceNotFound;

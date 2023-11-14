@@ -2,6 +2,7 @@
 #define IGDEMO_RENDER_PROCESSING_EQUIRECT_TO_CUBEMAP_H
 
 #include <igasset/schema/igasset.h>
+#include <igdemo/render/geo/cube.h>
 #include <webgpu/webgpu_cpp.h>
 
 namespace igdemo {
@@ -23,9 +24,10 @@ class EquirectangularToCubemapPipeline {
 
   ConversionOutput convert(const wgpu::Device& device, const wgpu::Queue& queue,
                            const wgpu::TextureView& equirect,
+                           const CubemapUnitCube& unit_cube,
                            std::uint32_t cubemap_face_width,
                            wgpu::TextureUsage usage,
-                           const char* label = nullptr);
+                           const char* label = nullptr) const;
 
  private:
   wgpu::RenderPipeline pipeline_;

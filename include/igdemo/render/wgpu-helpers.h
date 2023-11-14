@@ -13,6 +13,13 @@ struct SizedWgpuBuffer {
   uint32_t size;
 };
 
+struct TextureWithMeta {
+  wgpu::Texture texture;
+  std::uint32_t width;
+  std::uint32_t height;
+  wgpu::TextureFormat format;
+};
+
 wgpu::ShaderModule create_shader_module(const wgpu::Device& device,
                                         const std::string& source,
                                         const char* label);

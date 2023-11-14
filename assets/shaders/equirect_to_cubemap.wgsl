@@ -1,5 +1,9 @@
 // Adapted from https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/6.pbr/2.2.2.ibl_specular_textured/2.2.2.equirectangular_to_cubemap.fs
 
+struct VertexInput {
+  @location(0) vertex_position: vec3f,
+}
+
 struct FragmentInput {
   @builtin(position) frag_coord: vec4f,
   @location(0) world_pos: vec3f,
@@ -13,14 +17,9 @@ struct FragmentOutput {
 @group(1) @binding(0) var equirectSampler: sampler;
 @group(1) @binding(1) var equirectTexture: texture_2d<f32>;
 
-const kVertexPositions = array(
-    vec2f( 1.0,  1.0), vec2f( 1.0, -1.0), vec2f(-1.0, -1.0),
-    vec2f( 1.0,  1.0), vec2f(-1.0, -1.0), vec2f(-1.0,  1.0),
-);
-
 @vertex
-fn vs(@builtin(vertex_index) vi: u32) -> FragmentInput {
-  let vertexPosition = kVertexPositions[vi];
+fn vs(vin: VertexInput) -> FragmentInput {
+  let vertexPosition = vin.vertex_position;
 
   var out: FragmentInput;
 

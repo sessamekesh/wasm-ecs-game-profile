@@ -12,7 +12,7 @@
       }
     },
     {
-      "igasset_name": "sunset-skybox-hdr",
+      "igasset_name": "sunsetSkyboxHdr",
       "action_type": "EncodeRawHdrFile",
       "action": {
         "input_file_path": "industrial_sunset_02_puresky_2k.hdr"

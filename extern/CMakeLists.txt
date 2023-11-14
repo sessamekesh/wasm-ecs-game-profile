@@ -118,6 +118,19 @@ add_library(stb-image "stb/include/stb/stb_image.h" "stb/stb_image_impl.cc")
 set_target_properties(stb-image PROPERTIES CXX_STANDARD 20)
 target_include_directories(stb-image PUBLIC stb/include)
 
+# Half-float implementation, useful for HDR things
+FetchContent_Declare(
+    f16tlib
+    GIT_REPOSITORY "https://github.com/fengwang/float16_t"
+    GIT_TAG "57164cb59aa57c13110966319150101d3ff12281"
+)
+FetchContent_GetProperties(f16tlib)
+if (NOT f16tlib_POPULATED)
+  FetchContent_Populate(f16tlib)
+endif ()
+add_library(float16t INTERFACE)
+target_include_directories(float16t INTERFACE ${f16tlib_SOURCE_DIR})
+
 # Emscripten setup (make sure to build with correct compiler flags for final output binary)
 if (EMSCRIPTEN)
   set_wasm_target_properties(TARGET_NAME igasync)
