@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
         "igdemo - a demo for profiling Indigo game logic on native and WASM "
         "builds",
         "igdemo"};
-    cli.add_option("--multithreaded", singlethreaded,
+    cli.add_option("--singlethreaded", singlethreaded,
                    "Run this app in single-threaded mode")
         ->default_val(false);
     cli.add_option("--seed", rng_seed,

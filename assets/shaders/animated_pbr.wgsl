@@ -104,11 +104,9 @@ fn vs(vertex: VertexInput) -> VertexOutput {
     vertex.bone_weights.y * skinMatrices.data[vertex.bone_indices.y] +
     vertex.bone_weights.z * skinMatrices.data[vertex.bone_indices.z] +
     vertex.bone_weights.w * skinMatrices.data[vertex.bone_indices.w]);
-  
-  let normal = normalize(vertex.normal);
 
   out.world_pos = (matWorld * skin_transform * vec4f(vertex.position, 1.)).xyz;
-  out.world_normal = (matWorld * skin_transform * vec4(normal, 0.)).xyz;
+  out.world_normal = normalize((matWorld * skin_transform * vec4(normalize(vertex.normal), 0.))).xyz;
   out.frag_coord = cameraParams.mat_view_proj * vec4f(out.world_pos, 1.);
 
   return out;

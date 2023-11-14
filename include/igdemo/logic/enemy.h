@@ -13,7 +13,7 @@ struct EnemyTag {};
 entt::entity create_enemy_entity(igecs::WorldView* wv, glm::vec2 startPos,
                                  float startOrientation = 0.f,
                                  ModelType modelType = ModelType::YBOT,
-                                 float modelScale = 0.01f);
+                                 float modelScale = 1.f);
 
 }  // namespace igdemo::enemy
 

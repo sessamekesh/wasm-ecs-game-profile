@@ -319,8 +319,8 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_ybot_resources(
         bParams.roughness = 0.75f;
 
         wv.attach_ctx<CtxYbotResources>(CtxYbotResources{
-            std::move(*defeated), std::move(*walk), std::move(*run),
-            std::move(*idle), std::move(*skeleton), std::move(ybot_geometry),
+            *std::move(defeated), *std::move(walk), *std::move(run),
+            *std::move(idle), *std::move(skeleton), std::move(ybot_geometry),
             AnimatedPbrMaterial(device, queue, shader.obj_bgl, rParams),
             AnimatedPbrMaterial(device, queue, shader.obj_bgl, gParams),
             AnimatedPbrMaterial(device, queue, shader.obj_bgl, bParams)});

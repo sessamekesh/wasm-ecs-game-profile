@@ -16,15 +16,15 @@ void create_main_camera(igecs::WorldView* wv) {
   auto e = wv->create();
   wv->attach<igdemo::CameraComponent>(
       e, igdemo::CameraComponent{/* position */
-                                 glm::vec3(0.f, 2.f, -4.f),
+                                 glm::vec3(0.f, 100.f, -100.f),
                                  /* lookAt */
-                                 glm::vec3(0.f, 0.f, 0.f),
+                                 glm::vec3(0.f, 100.f, 0.f),
                                  /* up */
                                  glm::vec3(0.f, 1.f, 0.f),
                                  /* fovy */
                                  glm::radians(85.f),
                                  /* nearPlane + farPlane */
-                                 0.01f, 100.f});
+                                 0.01f, 10000.f});
   wv->attach_ctx<igdemo::CtxActiveCamera>(igdemo::CtxActiveCamera{e});
 }
 
@@ -51,15 +51,17 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
   wv.attach_ctx<CtxFrameTime>();
   ::create_main_camera(&wv);
   wv.attach_ctx<CtxGeneralSceneParams>(
-      CtxGeneralSceneParams{/* sunDirection */ glm::vec3(1.f, -8.f, -1.f),
-                            /* sunColor */ glm::vec3(1.f, 1.f, 1.f),
-                            /* ambientCoefficient */ 0.25f});
+      CtxGeneralSceneParams{/* sunDirection */ glm::vec3(1.f, -4.f, 1.f),
+                            /* sunColor */ glm::vec3(100.f, 100.f, 100.f),
+                            /* ambientCoefficient */ 0.000001f});
   wv.attach_ctx<CtxHdrPassOutput>(app_base->Device, app_base->Width,
                                   app_base->Height);
 
   // Setup logical level state...
   // TODO (sessamekesh): Generate from config
-  auto enemy = enemy::create_enemy_entity(&wv, glm::vec2(0.f, 0.f));
+  auto enemy =
+      enemy::create_enemy_entity(&wv, glm::vec2(0.f, 0.f), glm::radians(180.f),
+                                 igdemo::ModelType::YBOT, 1.f);
 
   // Load stuff from the network and initialize resources...
   auto combiner = igasync::PromiseCombiner::Create();

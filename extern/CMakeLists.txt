@@ -25,7 +25,7 @@ if (IG_TOOLS_BUILD AND NOT EMSCRIPTEN)
   FetchContent_Declare(
       assimp
       GIT_REPOSITORY "https://github.com/assimp/assimp"
-      GIT_TAG "28ab0a094a66474f0379d004671c3d6a26457c38"
+      GIT_TAG "fa71b84c1"
   )
   FetchContent_MakeAvailable(assimp)
 endif ()
