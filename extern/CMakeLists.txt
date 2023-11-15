@@ -3,7 +3,7 @@ include(FetchContent)
 FetchContent_Declare(
     igasync
     GIT_REPOSITORY "https://github.com/sessamekesh/igasync"
-    GIT_TAG "64fde19a07cc38118db6486feb400241c63abe31"
+    GIT_TAG "a9d971337ffa505fc29650359eb5db13806eb82c"
 )
 FetchContent_MakeAvailable(igasync)
 

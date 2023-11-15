@@ -113,7 +113,8 @@ EMSCRIPTEN_BINDINGS(IgDemoModule) {
       .field("numProfiles", &igdemo::IgdemoConfig::numProfiles)
       .field("profileFrameGapSize", &igdemo::IgdemoConfig::profileFrameGapSize)
       .field("renderOutput", &igdemo::IgdemoConfig::renderOutput)
-      .field("multithreaded", &igdemo::IgdemoConfig::multithreaded);
+      .field("multithreaded", &igdemo::IgdemoConfig::multithreaded)
+      .field("assetRootPath", &igdemo::IgdemoConfig::assetRootPath);
 
   class_<igdemo::IgdemoApp>("IgdemoApp")
       .function("update_and_render", &igdemo::IgdemoApp::update_and_render);

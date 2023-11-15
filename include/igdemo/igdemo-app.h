@@ -48,6 +48,11 @@ struct IgdemoConfig {
    *  everything on the main thread
    */
   bool multithreaded;
+
+  /**
+   * @brief Base path to read resources from
+  */
+  std::string assetRootPath;
 };
 
 enum class FileReadError { FileNotFound, FileNotRead };

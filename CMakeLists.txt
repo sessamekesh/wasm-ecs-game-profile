@@ -8,7 +8,7 @@ project(
 set(IG_TOOL_WRANGLE_PATH "${CMAKE_BINARY_DIR}/wrangle-tools.cmake" CACHE FILEPATH "Location of the native tool wrangling CMake file - native builds write to this path, WASM builds read from it")
 set(IG_TOOLS_BUILD "ON" CACHE BOOL "Build tools if this option is set to true")
 set(IG_ENABLE_ECS_VALIDATION "ON" CACHE BOOL "Include asserts that validate ECS concurrency safety (useful in debugging, but creates loud errors)")
-set(IG_ENABLE_WASM_THREADS "ON" CACHE BOOL "Include asserts that validate ECS concurrency safety (useful in debugging, but creates loud errors)")
+set(IG_ENABLE_WASM_THREADS "ON" CACHE BOOL "Build targets with threading support")
 
 include(cmake/import_build_tools.cmake)
 include(cmake/gen_flatbuffer_cpp.cmake)
