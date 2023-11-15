@@ -1,5 +1,7 @@
 #include <igdemo/platform/web/raii-fetch.h>
 
+#include <iostream>
+
 namespace {
 
 struct Request {
@@ -86,7 +88,6 @@ read_file(std::string path) {
   attr.onerror = em_fetch_error;
 
   std::string full_path = path;
-
   emscripten_fetch(&attr, full_path.c_str());
 
   return rsl;

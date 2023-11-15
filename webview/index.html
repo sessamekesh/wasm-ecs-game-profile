@@ -13,25 +13,47 @@
             numProfiles: 1,
             profileFrameGapSize: 0,
             renderOutput: true,
-            multithreaded: true,
+            multithreaded: false,
         };
 
         IgDemoModule().then((GameLibInst) => {
             GameLibInst['canvas'] = document.getElementById('game-canvas');
+            const loading_task_list = GameLibInst['TaskList']['Create']({
+                queueSizeHint: 20,
+                enqueueListenerSizeHint: 1,
+            });
             const proc_table = GameLibInst['create_proc_table'](
                 /* dump_profile_cb */
                 (profileString) => {
                     console.log('Profile:', profileString);
-                });
+                },
+                /* process_events_task_list */
+                loading_task_list);
+            let taskListDeleted = false;
+            let taskListProcessInterval = setInterval(() => {
+                for (let i = 0; i < 100; i++) {
+                    if (taskListDeleted) return;
+                    if (!loading_task_list['execute_next']()) {
+                        break;
+                    }
+                }
+            }, 25);
             GameLibInst.create_new_app(
                 /* canvas_name */
                 '#game-canvas',
+                /* process_events_task_list */
+                loading_task_list,
                 /* config */
                 config,
                 /* proc_table */
                 proc_table,
                 /* resolve */
-                (app) => {
+                (appParam) => {
+                    const app = appParam.clone();
+                    loading_task_list.delete();
+                    taskListDeleted = true;
+                    clearInterval(taskListProcessInterval);
+
                     let last_frame_time = performance.now();
                     const frame = () => {
                         const this_frame_time = performance.now();
@@ -46,6 +68,7 @@
                 },
                 /* reject */
                 console.error);
+
         });</script>
 </body>
 </html>

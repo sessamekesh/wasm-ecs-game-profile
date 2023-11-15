@@ -202,13 +202,13 @@ std::variant<RawHdr, IgpackExtractError> IgpackDecoder::extract_raw_hdr(
     int width, height, num_channels;
     float* data = stbi_loadf_from_memory(hdr_raw_fb->bin()->data(),
                                          hdr_raw_fb->bin()->size(), &width,
-                                         &height, &num_channels, 4);
+                                         &height, &num_channels, 0);
 
     if (!data) {
       return IgpackExtractError::MalformedResourceData;
     }
 
-    if (num_channels != 4 || width < 1 || height < 1) {
+    if (num_channels < 3 || width < 1 || height < 1) {
       stbi_image_free(data);
       return IgpackExtractError::MalformedResourceData;
     }

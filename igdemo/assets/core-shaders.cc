@@ -21,11 +21,14 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_core_shaders(
                 if (std::holds_alternative<FileReadError>(rsl)) {
                   return std::string("");
                 }
-
                 return std::get<std::string>(rsl);
               },
               compute_tasks)
-          ->then_consuming(igasset::IgpackDecoder::Create, compute_tasks);
+          ->then_consuming(igasset::IgpackDecoder::Create, compute_tasks)
+          // Hack for WASM - move the igpack decoder object to the main thread
+          //  to ensure that queueing with the device reference happens from the
+          //  main thread
+          ->then_consuming([](auto r) { return r; }, main_thread_tasks);
 
   auto pbr_animated_setup_promise = decoder_promise->then(
       [device, r](std::shared_ptr<igasset::IgpackDecoder> decoder) {

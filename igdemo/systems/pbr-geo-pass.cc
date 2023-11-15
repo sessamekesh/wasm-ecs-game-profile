@@ -145,7 +145,7 @@ void PbrGeoPassSystem::run(igecs::WorldView* wv) {
 
   wgpu::RenderPassColorAttachment ca{};
   ca.clearValue = {0.f, 0.f, 0.f, 1.f};
-  ca.loadOp = wgpu::LoadOp::Clear;
+  ca.loadOp = wgpu::LoadOp::Load;
   ca.storeOp = wgpu::StoreOp::Store;
   ca.view = hdrOutView;
 

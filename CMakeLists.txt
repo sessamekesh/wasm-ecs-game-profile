@@ -8,6 +8,7 @@ project(
 set(IG_TOOL_WRANGLE_PATH "${CMAKE_BINARY_DIR}/wrangle-tools.cmake" CACHE FILEPATH "Location of the native tool wrangling CMake file - native builds write to this path, WASM builds read from it")
 set(IG_TOOLS_BUILD "ON" CACHE BOOL "Build tools if this option is set to true")
 set(IG_ENABLE_ECS_VALIDATION "ON" CACHE BOOL "Include asserts that validate ECS concurrency safety (useful in debugging, but creates loud errors)")
+set(IG_ENABLE_WASM_THREADS "ON" CACHE BOOL "Include asserts that validate ECS concurrency safety (useful in debugging, but creates loud errors)")
 
 include(cmake/import_build_tools.cmake)
 include(cmake/gen_flatbuffer_cpp.cmake)
@@ -39,6 +40,7 @@ set(igdemo_includes
   "include/igdemo/render/geo/cube.h"
   "include/igdemo/render/processing/equirect-to-cubemap.h"
   "include/igdemo/render/animated-pbr.h"
+  "include/igdemo/render/bg-skybox.h"
   "include/igdemo/render/camera.h"
   "include/igdemo/render/ctx-components.h"
   "include/igdemo/render/skeletal-animation.h"
@@ -48,6 +50,7 @@ set(igdemo_includes
   "include/igdemo/systems/attach-renderables.h"
   "include/igdemo/systems/locomotion.h"
   "include/igdemo/systems/pbr-geo-pass.h"
+  "include/igdemo/systems/skybox.h"
   "include/igdemo/systems/tonemap-pass.h"
   "include/igdemo/igdemo-app.h"
   "include/igdemo/scheduler.h")
@@ -60,12 +63,14 @@ set(igdemo_sources
   "igdemo/render/geo/cube.cc"
   "igdemo/render/processing/equirect-to-cubemap.cc"
   "igdemo/render/animated-pbr.cc"
+  "igdemo/render/bg-skybox.cc"
   "igdemo/render/ctx-components.cc"
   "igdemo/render/wgpu-helpers.cc"
   "igdemo/systems/animation.cc"
   "igdemo/systems/attach-renderables.cc"
   "igdemo/systems/locomotion.cc"
   "igdemo/systems/pbr-geo-pass.cc"
+  "igdemo/systems/skybox.cc"
   "igdemo/systems/tonemap-pass.cc"
   "igdemo/igdemo-app.cc"
   "igdemo/scheduler.cc")
@@ -121,6 +126,7 @@ BUILD_IG_ASSET_PACK_PLAN(
     PLAN assets/skybox.igpack-plan.json
     INDIR assets
     INFILES
+      "shaders/bg_skybox.wgsl"
       "shaders/equirect_to_cubemap.wgsl"
       "industrial_sunset_02_puresky_2k.hdr"
     TARGET_OUTPUT_FILES

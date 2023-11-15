@@ -4,6 +4,7 @@
 #include <igdemo/systems/attach-renderables.h>
 #include <igdemo/systems/locomotion.h>
 #include <igdemo/systems/pbr-geo-pass.h>
+#include <igdemo/systems/skybox.h>
 #include <igdemo/systems/tonemap-pass.h>
 
 namespace igdemo {
@@ -64,15 +65,22 @@ igecs::Scheduler build_update_and_render_scheduler(
           .depends_on(transform_ozz_animation_to_model_space)
           .build<PbrUploadPerInstanceBuffersSystem>();
 
+  auto skybox_pass = builder.add_node()
+                         .main_thread_only()
+                         .depends_on(pbr_upload_scene_buffers)
+                         .build<SkyboxRenderSystem>();
+
   auto pbr_geo_pass = builder.add_node()
                           .main_thread_only()
                           .depends_on(pbr_upload_scene_buffers)
                           .depends_on(pbr_upload_instance_buffers)
+                          .depends_on(skybox_pass)
                           .build<PbrGeoPassSystem>();
 
   auto tonemapping_pass = builder.add_node()
                               .main_thread_only()
                               .depends_on(pbr_geo_pass)
+                              .depends_on(skybox_pass)
                               .build<TonemapPass>();
 
   return builder.build();

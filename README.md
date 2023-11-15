@@ -50,7 +50,7 @@ on debug builds:
 
 ```bash
 # From out/wasm
-node ../../webview/game-server.js --port=8000
+node ../../webview/simple-server.js --port 8000
 ```
 
 The `--port` argument is optional, and defaults to 8000.

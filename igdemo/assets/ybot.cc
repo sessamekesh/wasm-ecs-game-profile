@@ -236,7 +236,7 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_ybot_resources(
           compute_tasks),
       compute_tasks);
 
-  combiner->add(shaderLoadedPromise, compute_tasks);
+  combiner->add(shaderLoadedPromise, main_thread_tasks);
 
   return combiner->combine(
       [r, pos_norm_key, indices_key, bone_weights_key, bone_names_key,

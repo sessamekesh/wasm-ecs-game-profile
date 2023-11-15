@@ -10,14 +10,9 @@ using namespace emscripten;
 
 static std::unique_ptr<iggpu::AppBase> gAppBase = nullptr;
 
-// Hack... Replace this with a settimeout(0) or promise.resolve().then or
-//  something.
-class ImmediateExecutionContext : public igasync::ExecutionContext {
- public:
-  void schedule(std::unique_ptr<igasync::Task> task) override { task->run(); }
-};
-
-igdemo::IgdemoProcTable create_proc_table(val dump_profile_cb) {
+igdemo::IgdemoProcTable create_proc_table(
+    val dump_profile_cb,
+    std::shared_ptr<igasync::TaskList> process_events_task_list) {
   igdemo::IgdemoProcTable proc_table{};
 
   proc_table.dumpProfileCb = [dump_profile_cb](std::string json) {
@@ -28,15 +23,16 @@ igdemo::IgdemoProcTable create_proc_table(val dump_profile_cb) {
   return proc_table;
 }
 
-void create_new_app(std::string canvas_name, igdemo::IgdemoConfig config,
+void create_new_app(std::string canvas_name,
+                    std::shared_ptr<igasync::TaskList> main_thread_task_list,
+                    igdemo::IgdemoConfig config,
                     igdemo::IgdemoProcTable proc_table, val resolve,
                     val reject) {
-  auto immediate_context = std::make_shared<ImmediateExecutionContext>();
   iggpu::AppBase::Create(canvas_name)
       ->consume(
           [resolve, reject, config = std::move(config),
            proc_table = std::move(proc_table),
-           immediate_context](auto base_app_create_rsl) {
+           main_thread_task_list](auto base_app_create_rsl) {
             if (std::holds_alternative<iggpu::AppBaseCreateError>(
                     base_app_create_rsl)) {
               std::stringstream ss;
@@ -63,23 +59,22 @@ void create_new_app(std::string canvas_name, igdemo::IgdemoConfig config,
               thread_pool_desc.AdditionalThreads = 0;
             }
             auto thread_pool = igasync::ThreadPool::Create(thread_pool_desc);
-            auto main_thread_tasks = igasync::TaskList::Create();
             auto async_tasks = igasync::TaskList::Create();
 
             if (config.multithreaded) {
               thread_pool->add_task_list(async_tasks);
             } else {
-              async_tasks = main_thread_tasks;
+              async_tasks = main_thread_task_list;
             }
 
             auto load_start_time = std::chrono::high_resolution_clock::now();
             auto app_create_rsl = igdemo::IgdemoApp::Create(
                 gAppBase.get(), std::move(config), std::move(proc_table),
-                thread_pool->thread_ids(), main_thread_tasks, async_tasks);
+                thread_pool->thread_ids(), main_thread_task_list, async_tasks);
 
             app_create_rsl->consume(
-                [immediate_context, load_start_time, config = std::move(config),
-                 resolve, reject](auto rsl) {
+                [main_thread_task_list, load_start_time,
+                 config = std::move(config), resolve, reject](auto rsl) {
                   if (std::holds_alternative<igdemo::IgdemoLoadError>(rsl)) {
                     const auto& err = std::get<igdemo::IgdemoLoadError>(rsl);
 
@@ -98,9 +93,9 @@ void create_new_app(std::string canvas_name, igdemo::IgdemoConfig config,
                   resolve(std::move(std::move(
                       std::get<std::unique_ptr<igdemo::IgdemoApp>>(rsl))));
                 },
-                immediate_context);
+                main_thread_task_list);
           },
-          immediate_context);
+          main_thread_task_list);
 }
 
 EMSCRIPTEN_BINDINGS(IgDemoModule) {
@@ -119,6 +114,15 @@ EMSCRIPTEN_BINDINGS(IgDemoModule) {
   class_<igdemo::IgdemoApp>("IgdemoApp")
       .function("update_and_render", &igdemo::IgdemoApp::update_and_render);
   class_<igdemo::IgdemoProcTable>("IgdemoProcTable");
+
+  value_object<igasync::TaskList::Desc>("TaskListDesc")
+      .field("queueSizeHint", &igasync::TaskList::Desc::QueueSizeHint)
+      .field("enqueueListenerSizeHint",
+             &igasync::TaskList::Desc::EnqueueListenerSizeHint);
+  class_<igasync::TaskList>("TaskList")
+      .class_function("Create", &igasync::TaskList::Create)
+      .smart_ptr<std::shared_ptr<igasync::TaskList>>("TaskList")
+      .function("execute_next", &igasync::TaskList::execute_next);
 
   function("create_proc_table", &create_proc_table);
   function("create_new_app", &create_new_app);

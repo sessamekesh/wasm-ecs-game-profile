@@ -32,7 +32,7 @@ fn vs(vin: VertexInput) -> FragmentInput {
 const invAtan = vec2f(0.1591, 0.3183);
 
 fn SampleSphericalMap(v: vec3f) -> vec2f {
-  var uv = vec2f(atan(v.z, v.x), asin(v.y));
+  var uv = vec2f(atan2(v.z, v.x), asin(v.y));
   uv *= invAtan;
   uv += vec2f(0.5);
   return uv;
@@ -41,7 +41,7 @@ fn SampleSphericalMap(v: vec3f) -> vec2f {
 @fragment
 fn fs(fragment: FragmentInput) -> FragmentOutput {
   let uv = SampleSphericalMap(normalize(fragment.world_pos));
-  let color = textureSample(equirectTexture, equirectSampler, uv);
+  let color = textureSample(equirectTexture, equirectSampler, uv).rgb;
 
   var out: FragmentOutput;
   out.hdr_fragment = vec4f(color, 1.);

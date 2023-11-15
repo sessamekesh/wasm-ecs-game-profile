@@ -64,7 +64,11 @@ fn fs(frag: FragmentInput) -> FragmentOutput {
 
   // Multiply by 1.8? Dunno, give it a go and see how it looks I guess.
   // https://github.com/TheRealMJP/BakingLab/blob/6677ddbd5f90a0548e74647dd37753b2858f376d/BakingLab/ToneMapping.hlsl#L105
-  let ldr_linear = aces_fitted(hdr_color.rgb) * 1.8;
+
+  // Exposure filtiner!
+  let exposure_adjusted = hdr_color.xyz * 1. / 6.;
+
+  let ldr_linear = aces_fitted(exposure_adjusted);
   let ldr_srgb = linear_to_srgb(ldr_linear);
   let ldr_gamma_corrected = pow(ldr_srgb, vec3f(1. / 2.2));
   out.ldr_fragment = vec4f(ldr_gamma_corrected, 1.);

@@ -17,7 +17,7 @@ void create_main_camera(igecs::WorldView* wv) {
   auto e = wv->create();
   wv->attach<igdemo::CameraComponent>(
       e, igdemo::CameraComponent{/* position */
-                                 glm::vec3(0.f, 100.f, -100.f),
+                                 glm::vec3(0.f, 175.f, -150.f),
                                  /* lookAt */
                                  glm::vec3(0.f, 100.f, 0.f),
                                  /* up */
@@ -53,7 +53,7 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
   ::create_main_camera(&wv);
   wv.attach_ctx<CtxGeneralSceneParams>(
       CtxGeneralSceneParams{/* sunDirection */ glm::vec3(1.f, -4.f, 1.f),
-                            /* sunColor */ glm::vec3(10.f, 10.f, 10.f),
+                            /* sunColor */ glm::vec3(100.f, 100.f, 100.f),
                             /* ambientCoefficient */ 0.0001f});
   wv.attach_ctx<CtxHdrPassOutput>(app_base->Device, app_base->Width,
                                   app_base->Height);
@@ -75,18 +75,19 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
       load_ybot_resources(
           proc_table, registry.get(), "resources/", app_base->Device,
           app_base->Queue, main_thread_tasks, async_tasks,
-          shaders_promise->then([](const auto&) {}, async_tasks)),
-      async_tasks);
-  auto shaders_load_errorskey = combiner->add(shaders_promise, async_tasks);
+          shaders_promise->then([](const auto&) {}, main_thread_tasks)),
+      main_thread_tasks);
+  auto shaders_load_errorskey =
+      combiner->add(shaders_promise, main_thread_tasks);
   auto skybox_load_errorskey = combiner->add(
       load_skybox(proc_table, registry.get(), "resources/", app_base->Device,
                   app_base->Queue, main_thread_tasks, async_tasks),
-      async_tasks);
+      main_thread_tasks);
 
   auto frame_execution_graph_key = combiner->add_consuming(
       main_thread_tasks->run(build_update_and_render_scheduler,
                              worker_thread_ids),
-      async_tasks);
+      main_thread_tasks);
 
   // Little hack to get registry from this scope into the return scope
   //  since igasync doesn't currently support mutable lambdas.
@@ -106,10 +107,11 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
 
         // TODO (sessamekesh): error handling
 
-        return std::unique_ptr<IgdemoApp>(
+        auto app = std::unique_ptr<IgdemoApp>(
             new IgdemoApp(config, proc_table, std::move(registry),
                           std::move(frame_execution_graph), app_base,
                           main_thread_tasks, async_tasks));
+        return app;
       },
       main_thread_tasks);
 }

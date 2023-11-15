@@ -16,7 +16,6 @@ class RawHdr {
   std::size_t size() const;
   std::uint32_t width() const;
   std::uint32_t height() const;
-  std::uint32_t num_channels() const;
 
   RawHdr() = delete;
   ~RawHdr() = default;
@@ -26,12 +25,11 @@ class RawHdr {
   RawHdr& operator=(RawHdr&&) = default;
 
  private:
-  // Why std::string and not std::vector<float>?
+  // Why std::string and not std::vector<numeric::float16_t>?
   // https://github.com/sessamekesh/slow-wasm-vec-dtor
   std::string raw_data_;
   std::uint32_t width_;
   std::uint32_t height_;
-  std::uint32_t num_channels_;
 };
 
 }  // namespace igasset
