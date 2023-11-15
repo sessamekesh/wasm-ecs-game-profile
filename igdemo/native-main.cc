@@ -132,6 +132,8 @@ int main(int argc, char** argv) {
         .detach();
     return rsl;
   };
+  proc_table.indicateProgress =
+      [](igdemo::LoadingProgressMark mark) { /* no-op for native */ };
 
   igasync::ThreadPool::Desc thread_pool_desc{};
   if (config.multithreaded) {

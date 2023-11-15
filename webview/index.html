@@ -27,6 +27,10 @@
                 (profileString) => {
                     console.log('Profile:', profileString);
                 },
+                /* loading_progress_cb */
+                (loadingProgress) => {
+                    console.log('Loading progress: ', loadingProgress);
+                },
                 /* process_events_task_list */
                 loading_task_list);
             let taskListDeleted = false;

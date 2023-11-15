@@ -71,18 +71,38 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
       proc_table, registry.get(), "resources/", app_base->Device,
       app_base->Queue, app_base->preferred_swap_chain_texture_format(),
       main_thread_tasks, async_tasks);
-  auto ybot_load_errors_key = combiner->add(
-      load_ybot_resources(
-          proc_table, registry.get(), "resources/", app_base->Device,
-          app_base->Queue, main_thread_tasks, async_tasks,
-          shaders_promise->then([](const auto&) {}, main_thread_tasks)),
+  shaders_promise->on_resolve(
+      [proc_table](const auto&) {
+        proc_table.indicateProgress(LoadingProgressMark::CoreShadersLoaded);
+      },
       main_thread_tasks);
+
+  auto load_character_promise = load_ybot_resources(
+      proc_table, registry.get(), "resources/", app_base->Device,
+      app_base->Queue, main_thread_tasks, async_tasks,
+      shaders_promise->then([](const auto&) {}, main_thread_tasks));
+  shaders_promise->on_resolve(
+      [proc_table](const auto&) {
+        proc_table.indicateProgress(LoadingProgressMark::CharacterModelLoaded);
+      },
+      main_thread_tasks);
+
+  auto ybot_load_errors_key =
+      combiner->add(load_character_promise, main_thread_tasks);
   auto shaders_load_errorskey =
       combiner->add(shaders_promise, main_thread_tasks);
-  auto skybox_load_errorskey = combiner->add(
+
+  auto load_skybox_promise =
       load_skybox(proc_table, registry.get(), "resources/", app_base->Device,
-                  app_base->Queue, main_thread_tasks, async_tasks),
+                  app_base->Queue, main_thread_tasks, async_tasks);
+  shaders_promise->on_resolve(
+      [proc_table](const auto&) {
+        proc_table.indicateProgress(LoadingProgressMark::SkyboxGenerated);
+      },
       main_thread_tasks);
+
+  auto skybox_load_errorskey =
+      combiner->add(load_skybox_promise, main_thread_tasks);
 
   auto frame_execution_graph_key = combiner->add_consuming(
       main_thread_tasks->run(build_update_and_render_scheduler,
@@ -106,6 +126,7 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
         auto registry = rsl.move(reg_promise_key);
 
         // TODO (sessamekesh): error handling
+        proc_table.indicateProgress(LoadingProgressMark::AppLoadSuccess);
 
         auto app = std::unique_ptr<IgdemoApp>(
             new IgdemoApp(config, proc_table, std::move(registry),

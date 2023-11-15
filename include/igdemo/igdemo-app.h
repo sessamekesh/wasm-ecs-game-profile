@@ -52,6 +52,15 @@ struct IgdemoConfig {
 
 enum class FileReadError { FileNotFound, FileNotRead };
 
+enum class LoadingProgressMark {
+  CharacterModelLoaded,
+  SkyboxGenerated,
+  CoreShadersLoaded,
+
+  AppLoadFailed,
+  AppLoadSuccess
+};
+
 struct IgdemoProcTable {
   /** @brief Callback to dump the collected profile(s) */
   std::function<void(std::string)> dumpProfileCb;
@@ -60,6 +69,9 @@ struct IgdemoProcTable {
   std::function<std::shared_ptr<igasync::Promise<
       std::variant<std::string, FileReadError>>>(std::string file_path)>
       loadFileCb;
+
+  /** @brief Callback to invoke on various loading progress milestones */
+  std::function<void(LoadingProgressMark)> indicateProgress;
 };
 
 struct IgdemoLoadError {

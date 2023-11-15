@@ -11,13 +11,17 @@ using namespace emscripten;
 static std::unique_ptr<iggpu::AppBase> gAppBase = nullptr;
 
 igdemo::IgdemoProcTable create_proc_table(
-    val dump_profile_cb,
+    val dump_profile_cb, val loading_progress_cb,
     std::shared_ptr<igasync::TaskList> process_events_task_list) {
   igdemo::IgdemoProcTable proc_table{};
 
   proc_table.dumpProfileCb = [dump_profile_cb](std::string json) {
     dump_profile_cb(json);
   };
+  proc_table.indicateProgress =
+      [loading_progress_cb](igdemo::LoadingProgressMark mark) {
+        loading_progress_cb(mark);
+      };
   proc_table.loadFileCb = &igdemo::web::read_file;
 
   return proc_table;
@@ -123,6 +127,15 @@ EMSCRIPTEN_BINDINGS(IgDemoModule) {
       .class_function("Create", &igasync::TaskList::Create)
       .smart_ptr<std::shared_ptr<igasync::TaskList>>("TaskList")
       .function("execute_next", &igasync::TaskList::execute_next);
+
+  enum_<igdemo::LoadingProgressMark>("LoadingProgressMark")
+      .value("CharacterModelLoaded",
+             igdemo::LoadingProgressMark::CharacterModelLoaded)
+      .value("SkyboxGenerated", igdemo::LoadingProgressMark::SkyboxGenerated)
+      .value("CoreShadersLoaded",
+             igdemo::LoadingProgressMark::CoreShadersLoaded)
+      .value("AppLoadFailed", igdemo::LoadingProgressMark::AppLoadFailed)
+      .value("AppLoadSuccess", igdemo::LoadingProgressMark::AppLoadSuccess);
 
   function("create_proc_table", &create_proc_table);
   function("create_new_app", &create_new_app);
