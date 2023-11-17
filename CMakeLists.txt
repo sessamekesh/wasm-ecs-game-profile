@@ -38,7 +38,11 @@ set(igdemo_includes
   "include/igdemo/logic/locomotion.h"
   "include/igdemo/logic/renderable.h"
   "include/igdemo/render/geo/cube.h"
+  "include/igdemo/render/geo/fullscreen_quad.h"
+  "include/igdemo/render/processing/brdflut.h"
   "include/igdemo/render/processing/equirect-to-cubemap.h"
+  "include/igdemo/render/processing/gen-mips.h"
+  "include/igdemo/render/processing/irradiance-map-generator.h"
   "include/igdemo/render/animated-pbr.h"
   "include/igdemo/render/bg-skybox.h"
   "include/igdemo/render/camera.h"
@@ -61,7 +65,11 @@ set(igdemo_sources
   "igdemo/assets/ybot.cc"
   "igdemo/logic/enemy.cc"
   "igdemo/render/geo/cube.cc"
+  "igdemo/render/geo/fullscreen_quad.cc"
+  "igdemo/render/processing/brdflut.cc"
   "igdemo/render/processing/equirect-to-cubemap.cc"
+  "igdemo/render/processing/gen-mips.cc"
+  "igdemo/render/processing/irradiance-map-generator.cc"
   "igdemo/render/animated-pbr.cc"
   "igdemo/render/bg-skybox.cc"
   "igdemo/render/ctx-components.cc"
@@ -127,7 +135,10 @@ BUILD_IG_ASSET_PACK_PLAN(
     INDIR assets
     INFILES
       "shaders/bg_skybox.wgsl"
+      "shaders/brdf_lut.wgsl"
+      "shaders/hdr_mipgen.wgsl"
       "shaders/equirect_to_cubemap.wgsl"
+      "shaders/irradiance_gen.wgsl"
       "industrial_sunset_02_puresky_2k.hdr"
     TARGET_OUTPUT_FILES
       "resources/skybox.igpack")

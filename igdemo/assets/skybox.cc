@@ -3,6 +3,8 @@
 #include <igdemo/assets/skybox.h>
 #include <igdemo/render/bg-skybox.h>
 #include <igdemo/render/geo/cube.h>
+#include <igdemo/render/processing/brdflut.h>
+#include <igdemo/render/processing/irradiance-map-generator.h>
 #include <igdemo/render/wgpu-helpers.h>
 
 namespace igdemo {
@@ -15,6 +17,7 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_skybox(
     std::shared_ptr<igasync::ExecutionContext> compute_tasks) {
   auto wv = igecs::WorldView::Thin(r);
   wv.attach_ctx<CubemapUnitCube>(device, queue);
+  wv.attach_ctx<FullscreenQuad>(device, queue);
 
   auto igpack_decoder_promise =
       procs.loadFileCb(asset_root_path + "skybox.igpack")
@@ -32,6 +35,42 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_skybox(
           //  to ensure that queueing with the device reference happens from the
           //  main thread
           ->then_consuming([](auto r) { return r; }, main_thread_tasks);
+
+  auto mip_gen_promise = igpack_decoder_promise->then(
+      [device, queue,
+       r](std::shared_ptr<igasset::IgpackDecoder> decoder) -> bool {
+        if (!decoder) {
+          return false;
+        }
+        auto wgsl_rsl = decoder->extract_wgsl_shader("hdrMipGen");
+        if (std::holds_alternative<igasset::IgpackExtractError>(wgsl_rsl)) {
+          return false;
+        }
+        const auto* wgsl = std::get<const IgAsset::WgslSource*>(wgsl_rsl);
+        auto wv = igecs::WorldView::Thin(r);
+        wv.attach_ctx<CtxMipGen>(
+            CtxMipGen{HdrMipsGenerator::Create(device, wgsl)});
+        return true;
+      },
+      main_thread_tasks);
+
+  auto brdf_lut_promise = igpack_decoder_promise->then(
+      [device, queue, r](std::shared_ptr<igasset::IgpackDecoder> decoder)
+          -> std::optional<TextureWithMeta> {
+        if (!decoder) return {};
+        auto wgsl_rsl = decoder->extract_wgsl_shader("brdfLutWgsl");
+        if (std::holds_alternative<igasset::IgpackExtractError>(wgsl_rsl)) {
+          return {};
+        }
+        const auto* wgsl = std::get<const IgAsset::WgslSource*>(wgsl_rsl);
+
+        auto wv = igecs::WorldView::Thin(r);
+
+        auto gen = BRDFLutGenerator::Create(device, wgsl);
+        return gen.generate(device, queue, wv.ctx<FullscreenQuad>(), 512,
+                            "brdf-lut");
+      },
+      main_thread_tasks);
 
   auto equirect_to_cubemap_promise = igpack_decoder_promise->then(
       [device](std::shared_ptr<igasset::IgpackDecoder> decoder)
@@ -105,14 +144,17 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_skybox(
       skybox_maps_combiner->add(skybox_hdr_texture_promise, main_thread_tasks);
   auto smc_equirect_to_cubemap_key =
       skybox_maps_combiner->add(equirect_to_cubemap_promise, main_thread_tasks);
+  auto smc_mip_gen_key =
+      skybox_maps_combiner->add(mip_gen_promise, main_thread_tasks);
   auto skybox_cubemap_promise = skybox_maps_combiner->combine(
       [device, queue, smc_skybox_hdr_key, smc_equirect_to_cubemap_key,
-       r](igasync::PromiseCombiner::Result rsl)
+       smc_mip_gen_key, r](igasync::PromiseCombiner::Result rsl)
           -> std::optional<TextureWithMeta> {
         auto& skybox_hdr_rsl = rsl.get(smc_skybox_hdr_key);
         auto& equirect_to_cubemap_rsl = rsl.get(smc_equirect_to_cubemap_key);
+        bool is_mipgen_ready = rsl.get(smc_mip_gen_key);
 
-        if (!skybox_hdr_rsl || !equirect_to_cubemap_rsl) {
+        if (!skybox_hdr_rsl || !equirect_to_cubemap_rsl || !is_mipgen_ready) {
           return {};
         }
 
@@ -125,8 +167,8 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_skybox(
 
         auto conversion_output = equirect_to_cubemap.convert(
             device, queue, skybox_hdr.texture.CreateView(),
-            wv.ctx<CubemapUnitCube>(), kWidth,
-            wgpu::TextureUsage::TextureBinding, "hdr-skybox-texture");
+            wv.ctx<CubemapUnitCube>(), wv.ctx<CtxMipGen>().hdrMipGenerator,
+            kWidth, wgpu::TextureUsage::TextureBinding, "hdr-skybox-texture");
 
         TextureWithMeta t{};
         t.texture = conversion_output.cubemap;
@@ -134,6 +176,50 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_skybox(
         t.height = kWidth;
         t.format = wgpu::TextureFormat::RGBA16Float;
         return t;
+      },
+      main_thread_tasks);
+
+  auto irradiance_gen_combiner = igasync::PromiseCombiner::Create();
+  auto igc_decoder_key =
+      irradiance_gen_combiner->add(igpack_decoder_promise, compute_tasks);
+  auto igc_skybox_key =
+      irradiance_gen_combiner->add(skybox_cubemap_promise, main_thread_tasks);
+  auto igc_mip_gen_key =
+      irradiance_gen_combiner->add(mip_gen_promise, main_thread_tasks);
+
+  auto irradiance_gen_promise = irradiance_gen_combiner->combine(
+      [device, queue, r, igc_skybox_key, igc_decoder_key,
+       igc_mip_gen_key](igasync::PromiseCombiner::Result rsl)
+          -> std::optional<IrradianceCubemap> {
+        const auto& decoder = rsl.get(igc_decoder_key);
+        const auto& skybox = rsl.get(igc_skybox_key);
+        bool mip_gen_ready = rsl.get(igc_mip_gen_key);
+
+        if (!decoder) return {};
+        if (!skybox) return {};
+        if (!mip_gen_ready) return {};
+        auto wgsl_rsl = decoder->extract_wgsl_shader("irradianceGenWgsl");
+
+        if (std::holds_alternative<igasset::IgpackExtractError>(wgsl_rsl))
+          return {};
+
+        const auto* wgsl = std::get<const IgAsset::WgslSource*>(wgsl_rsl);
+
+        auto pipeline = IrradianceMapGenerator::Create(device, queue, wgsl);
+
+        wgpu::TextureViewDescriptor tvd{};
+        tvd.dimension = wgpu::TextureViewDimension::Cube;
+        tvd.arrayLayerCount = 6;
+        tvd.baseArrayLayer = 0;
+        tvd.baseMipLevel = 0;
+        tvd.mipLevelCount = 1;
+        tvd.format = wgpu::TextureFormat::RGBA16Float;
+        auto skyboxView = skybox->texture.CreateView(&tvd);
+
+        auto wv = igecs::WorldView::Thin(r);
+        return pipeline.generate(device, queue, wv.ctx<CubemapUnitCube>(),
+                                 wv.ctx<CtxMipGen>().hdrMipGenerator,
+                                 skyboxView, 32, "skybox-irradiance-map");
       },
       main_thread_tasks);
 
@@ -177,12 +263,19 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_skybox(
       final_combiner->add(skybox_cubemap_promise, main_thread_tasks);
   auto fc_skybox_pipeline_key =
       final_combiner->add_consuming(skybox_pipeline_promise, main_thread_tasks);
+  auto fc_brdf_key =
+      final_combiner->add_consuming(brdf_lut_promise, main_thread_tasks);
+  auto fc_irradiance_key =
+      final_combiner->add_consuming(irradiance_gen_promise, main_thread_tasks);
 
   return final_combiner->combine(
-      [r, fc_skybox_cubemap_key, fc_skybox_pipeline_key](
+      [r, fc_skybox_cubemap_key, fc_skybox_pipeline_key, fc_brdf_key,
+       fc_irradiance_key](
           igasync::PromiseCombiner::Result rsl) -> std::vector<std::string> {
         auto& skybox_cubemap_rsl = rsl.get(fc_skybox_cubemap_key);
         auto skybox_pipeline = rsl.move(fc_skybox_pipeline_key);
+        auto brdf_tex = rsl.move(fc_brdf_key);
+        auto irradiance_tex = rsl.move(fc_irradiance_key);
 
         std::vector<std::string> errors;
 
@@ -194,6 +287,14 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_skybox(
           errors.push_back("bgSkybox pipeline");
         }
 
+        if (!brdf_tex) {
+          errors.push_back("BRDF lookup texture");
+        }
+
+        if (!irradiance_tex) {
+          errors.push_back("Skybox irradiance lookup texture");
+        }
+
         if (errors.size() > 0) {
           return errors;
         }
@@ -202,8 +303,11 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_skybox(
         wv.attach_ctx<CtxHdrSkybox>(CtxHdrSkybox{
             skybox_cubemap_rsl->texture,
             skybox_cubemap_rsl->texture.CreateView(),
+            irradiance_tex->irradianceCubemap.texture,
+            irradiance_tex->irradianceCubemap.texture.CreateView(),
         });
         wv.attach_ctx<BgSkyboxPipeline>(*std::move(skybox_pipeline));
+        wv.attach_ctx<CtxBrdfLut>(*brdf_tex);
 
         return errors;
       },

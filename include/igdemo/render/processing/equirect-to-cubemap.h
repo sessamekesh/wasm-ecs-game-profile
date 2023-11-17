@@ -3,6 +3,7 @@
 
 #include <igasset/schema/igasset.h>
 #include <igdemo/render/geo/cube.h>
+#include <igdemo/render/processing/gen-mips.h>
 #include <webgpu/webgpu_cpp.h>
 
 namespace igdemo {
@@ -25,6 +26,7 @@ class EquirectangularToCubemapPipeline {
   ConversionOutput convert(const wgpu::Device& device, const wgpu::Queue& queue,
                            const wgpu::TextureView& equirect,
                            const CubemapUnitCube& unit_cube,
+                           const HdrMipsGenerator& mip_gen,
                            std::uint32_t cubemap_face_width,
                            wgpu::TextureUsage usage,
                            const char* label = nullptr) const;

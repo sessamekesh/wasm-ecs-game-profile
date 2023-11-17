@@ -4,17 +4,23 @@
 #include <igasync/promise.h>
 #include <igdemo/igdemo-app.h>
 #include <igdemo/render/processing/equirect-to-cubemap.h>
+#include <igdemo/render/processing/gen-mips.h>
 
 namespace igdemo {
+
+struct CtxMipGen {
+  HdrMipsGenerator hdrMipGenerator;
+};
 
 struct CtxHdrSkybox {
   wgpu::Texture cubemap;
   wgpu::TextureView cubemapView;
 
+  wgpu::Texture irradianceMap;
+  wgpu::TextureView irradianceMapView;
+
   // TODO (sessamekesh): Need the following generated things as well:
-  // irradiance map
   // prefilter map
-  // BRDF lookup texture map
   // See:
   // https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/6.pbr/2.2.2.ibl_specular_textured/ibl_specular_textured.cpp
 };

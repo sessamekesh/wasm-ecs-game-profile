@@ -22,6 +22,35 @@
       }
     },
     {
+      "igasset_name": "brdfLutWgsl",
+      "action_type": "CopyWgslSourceAction",
+      "action": {
+        "input_file_path": "shaders/brdf_lut.wgsl",
+        "vertex_entry_point": "vs",
+        "fragment_entry_point": "fs",
+        "strip_comments": false
+      }
+    },
+    {
+      "igasset_name": "hdrMipGen",
+      "action_type": "CopyWgslSourceAction",
+      "action": {
+        "input_file_path": "shaders/hdr_mipgen.wgsl",
+        "compute_entry_point": "computeMipMap",
+        "strip_comments": false
+      }
+    },
+    {
+      "igasset_name": "irradianceGenWgsl",
+      "action_type": "CopyWgslSourceAction",
+      "action": {
+        "input_file_path": "shaders/irradiance_gen.wgsl",
+        "vertex_entry_point": "vs",
+        "fragment_entry_point": "fs",
+        "strip_comments": false
+      }
+    },
+    {
       "igasset_name": "sunsetSkyboxHdr",
       "action_type": "EncodeRawHdrFile",
       "action": {

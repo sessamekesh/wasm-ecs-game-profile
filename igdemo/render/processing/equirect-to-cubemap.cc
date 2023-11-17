@@ -51,14 +51,16 @@ EquirectangularToCubemapPipeline EquirectangularToCubemapPipeline::Create(
 ConversionOutput EquirectangularToCubemapPipeline::convert(
     const wgpu::Device& device, const wgpu::Queue& queue,
     const wgpu::TextureView& equirect, const CubemapUnitCube& unit_cube,
-    std::uint32_t cubemap_face_width, wgpu::TextureUsage usage,
-    const char* label) const {
+    const HdrMipsGenerator& mip_gen, std::uint32_t cubemap_face_width,
+    wgpu::TextureUsage usage, const char* label) const {
   wgpu::TextureDescriptor cubemap_desc{};
   cubemap_desc.dimension = wgpu::TextureDimension::e2D;
   cubemap_desc.format = wgpu::TextureFormat::RGBA16Float;
   cubemap_desc.label = label;
+  cubemap_desc.mipLevelCount = get_num_mips(cubemap_face_width);
   cubemap_desc.size = wgpu::Extent3D{cubemap_face_width, cubemap_face_width, 6};
   cubemap_desc.usage = wgpu::TextureUsage::RenderAttachment |
+                       wgpu::TextureUsage::StorageBinding |
                        wgpu::TextureUsage::CopyDst | usage;
   auto cubemap_texture = device.CreateTexture(&cubemap_desc);
 
@@ -175,7 +177,7 @@ ConversionOutput EquirectangularToCubemapPipeline::convert(
     mvpBge[i] = wgpu::BindGroupEntry{};
     mvpBge[i].binding = 0;
     mvpBge[i].buffer = mvpBuffer;
-    mvpBge[i].offset = i * 256;
+    mvpBge[i].offset = i * 256u;
 
     mvpBgd[i].entryCount = 1;
     mvpBgd[i].entries = mvpBge + i;
@@ -258,6 +260,8 @@ ConversionOutput EquirectangularToCubemapPipeline::convert(
   tvd.baseMipLevel = 0;
   tvd.mipLevelCount = 1;
   tvd.format = wgpu::TextureFormat::RGBA16Float;
+
+  mip_gen.gen_cube_mips(device, queue, cubemap_texture, cubemap_face_width);
 
   return ConversionOutput{cubemap_texture, cubemap_texture.CreateView(&tvd)};
 }

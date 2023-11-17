@@ -1,5 +1,7 @@
 #include <igdemo/render/wgpu-helpers.h>
 
+#include <bit>
+
 namespace igdemo {
 
 wgpu::ShaderModule create_shader_module(const wgpu::Device& device,
@@ -13,6 +15,10 @@ wgpu::ShaderModule create_shader_module(const wgpu::Device& device,
   desc.label = label;
 
   return device.CreateShaderModule(&desc);
+}
+
+std::uint32_t get_num_mips(std::uint32_t texture_width) {
+  return std::bit_width(texture_width);
 }
 
 }  // namespace igdemo

@@ -20,6 +20,8 @@ struct TextureWithMeta {
   wgpu::TextureFormat format;
 };
 
+std::uint32_t get_num_mips(std::uint32_t texture_width);
+
 wgpu::ShaderModule create_shader_module(const wgpu::Device& device,
                                         const std::string& source,
                                         const char* label);
