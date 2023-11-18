@@ -95,6 +95,12 @@ struct SkinningParams {
 @group(2) @binding(0) var<uniform> skinMatrices: SkinningParams;
 @group(2) @binding(1) var<uniform> matWorld: mat4x4f;
 
+// IBL
+@group(3) @binding(0) var iblSampler: sampler;
+@group(3) @binding(1) var irradianceMap: texture_cube<f32>;
+@group(3) @binding(2) var prefilterMap: texture_cube<f32>;
+@group(3) @binding(3) var brdfLut: texture_2d<f32>;
+
 @vertex
 fn vs(vertex: VertexInput) -> VertexOutput {
   var out: VertexOutput;
@@ -140,7 +146,7 @@ fn fs(frag: VertexOutput) -> @location(0) vec4f {
 
   let numerator = NDF * G * F;
   let denominator = 4. * max(dot(N, V), 0.) * max(dot(N, L), 0.) + 0.0001;
-  let specular = numerator / denominator;
+  let lospecular = numerator / denominator;
 
   // kS is equal to Fresnel
   let kS = F;
@@ -153,12 +159,21 @@ fn fs(frag: VertexOutput) -> @location(0) vec4f {
   //  diffuse lighting, and a linear blend from metal to non-metal can be simulated.
   kD = kD * (1. - base_metal);
 
+  // IBL parameters: irradiance + diffuse
+  let irradiance = textureSample(irradianceMap, iblSampler, N).rgb;
+  let diffuse = irradiance * base_albedo;
+
   // Scale light by NdotL
   let NdotL = max(dot(N, L), 0.);
+  let Lo = (kD * base_albedo / PI + lospecular) * radiance * NdotL;
 
-  let Lo = (kD * base_albedo / PI + specular) * radiance * NdotL;
+  // IBL specular - combine prefilter and BRDF results
+  const MAX_REFLECTION_LOD = 4.0;
+  let prefilteredColor = textureSampleLevel(prefilterMap, iblSampler, R, base_roughness * MAX_REFLECTION_LOD).rgb;
+  let brdf = textureSample(brdfLut, iblSampler, vec2f(max(dot(N, V), 0.0), base_roughness)).rg;
+  let specular = prefilteredColor * (F * brdf.x + brdf.y);
 
-  let ambient = lightingParams.sun_color * lightingParams.ambient_coefficient * base_albedo;
+  let ambient = (kD * diffuse + specular);
   let hdr_color = ambient + Lo;
 
   return vec4f(hdr_color, 1.);

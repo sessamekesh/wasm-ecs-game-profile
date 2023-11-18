@@ -97,8 +97,10 @@ std::optional<CtxAnimatedPbrPipeline> CtxAnimatedPbrPipeline::Create(
   wgpu::BindGroupLayout frame_bgl = pipeline.GetBindGroupLayout(0);
   wgpu::BindGroupLayout obj_bgl = pipeline.GetBindGroupLayout(1);
   wgpu::BindGroupLayout inst_bgl = pipeline.GetBindGroupLayout(2);
+  wgpu::BindGroupLayout ibl_bgl = pipeline.GetBindGroupLayout(3);
 
-  return CtxAnimatedPbrPipeline{pipeline, frame_bgl, obj_bgl, inst_bgl};
+  return CtxAnimatedPbrPipeline{pipeline, frame_bgl, obj_bgl, inst_bgl,
+                                ibl_bgl};
 }
 
 AnimatedPbrFrameBindGroup::AnimatedPbrFrameBindGroup(
@@ -214,6 +216,57 @@ AnimatedPbrGeometry::AnimatedPbrGeometry(
   indexBufferSize = sized_index_buffer.size;
   numIndices = indices.size();
   indexFormat = wgpu::IndexFormat::Uint16;
+}
+
+AnimatedPbrIblBindGroup::AnimatedPbrIblBindGroup(
+    const wgpu::Device& device, const wgpu::BindGroupLayout& ibl_bgl,
+    const wgpu::Texture& irradianceMap, const wgpu::Texture& prefilteredEnvMap,
+    const wgpu::Texture& brdfLut) {
+  wgpu::BindGroupEntry samplerBge{};
+  samplerBge.binding = 0;
+  samplerBge.sampler = device.CreateSampler();
+
+  wgpu::TextureViewDescriptor irradianceMapViewDesc{};
+  irradianceMapViewDesc.dimension = wgpu::TextureViewDimension::Cube;
+  irradianceMapViewDesc.format = irradianceMap.GetFormat();
+  irradianceMapViewDesc.mipLevelCount = irradianceMap.GetMipLevelCount();
+  wgpu::TextureView irradianceView =
+      irradianceMap.CreateView(&irradianceMapViewDesc);
+
+  wgpu::BindGroupEntry irradianceBge{};
+  irradianceBge.binding = 1;
+  irradianceBge.textureView = irradianceView;
+
+  wgpu::TextureViewDescriptor prefilterEnvMapViewDesc{};
+  prefilterEnvMapViewDesc.dimension = wgpu::TextureViewDimension::Cube;
+  prefilterEnvMapViewDesc.format = prefilteredEnvMap.GetFormat();
+  prefilterEnvMapViewDesc.mipLevelCount = prefilteredEnvMap.GetMipLevelCount();
+  wgpu::TextureView prefilteredEnvMapView =
+      prefilteredEnvMap.CreateView(&prefilterEnvMapViewDesc);
+
+  wgpu::BindGroupEntry prefilterBge{};
+  prefilterBge.binding = 2;
+  prefilterBge.textureView = prefilteredEnvMapView;
+
+  wgpu::BindGroupEntry brdfLutBge{};
+  brdfLutBge.binding = 3;
+  brdfLutBge.textureView = brdfLut.CreateView();
+
+  wgpu::BindGroupEntry entries[] = {samplerBge, irradianceBge, prefilterBge,
+                                    brdfLutBge};
+
+  wgpu::BindGroupDescriptor bgd{};
+  bgd.entries = entries;
+  bgd.entryCount = 4;
+  bgd.layout = ibl_bgl;
+
+  wgpu::BindGroup bg = device.CreateBindGroup(&bgd);
+
+  bindGroup = bg;
+  iblSampler = samplerBge.sampler;
+  irradianceMapView = irradianceView;
+  prefilteredEnvView = prefilteredEnvMapView;
+  brdfLutView = brdfLutBge.textureView;
 }
 
 }  // namespace igdemo

@@ -8,12 +8,14 @@
 
 namespace igdemo {
 
-std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_core_shaders(
+LoadCoreShadersRslPromises load_core_shaders(
     const IgdemoProcTable& procs, entt::registry* r,
     std::string asset_root_path, const wgpu::Device& device,
     const wgpu::Queue& queue, wgpu::TextureFormat output_format,
     std::shared_ptr<igasync::ExecutionContext> main_thread_tasks,
     std::shared_ptr<igasync::ExecutionContext> compute_tasks) {
+  LoadCoreShadersRslPromises rsl{};
+
   auto decoder_promise =
       procs.loadFileCb(asset_root_path + "shaders.igpack")
           ->then_consuming(
@@ -41,6 +43,7 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_core_shaders(
                                                 "pbrAnimatedWgsl");
       },
       main_thread_tasks);
+  rsl.pbrShaderLoaded = pbr_animated_setup_promise;
 
   auto tonemap_system_setup_promise = decoder_promise->then(
       [device, queue, output_format,
@@ -63,16 +66,16 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_core_shaders(
   auto combiner = igasync::PromiseCombiner::Create();
 
   auto pbr_animated_setup_rsl_key =
-      combiner->add_consuming(pbr_animated_setup_promise, main_thread_tasks);
+      combiner->add(pbr_animated_setup_promise, main_thread_tasks);
   auto tonemap_setup_rsl_key =
       combiner->add_consuming(tonemap_system_setup_promise, main_thread_tasks);
 
-  return combiner->combine(
+  rsl.result = combiner->combine(
       [pbr_animated_setup_rsl_key, tonemap_setup_rsl_key,
        r](igasync::PromiseCombiner::Result rsl) -> std::vector<std::string> {
         std::vector<std::string> errors;
 
-        auto pbr_animated_rsl = rsl.move(pbr_animated_setup_rsl_key);
+        bool pbr_animated_rsl = rsl.get(pbr_animated_setup_rsl_key);
         auto tonemap_setup_rsl = rsl.move(tonemap_setup_rsl_key);
 
         if (!pbr_animated_rsl) {
@@ -90,6 +93,8 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_core_shaders(
         return errors;
       },
       main_thread_tasks);
+
+  return rsl;
 }
 
 }  // namespace igdemo

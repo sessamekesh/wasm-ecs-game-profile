@@ -114,20 +114,23 @@ fn fs(fin: FragmentInput) -> FragmentOutput {
 
     let NdotL = max(dot(N, L), 0.);
 
+    //let sampleValue = textureSampleLevel(cubeTexture, cubeSampler, L, mipLevel);
+    let sampleValue = textureSample(cubeTexture, cubeSampler, L);
+
     if (NdotL > 0.) {
       // Sample from the environment's mip level based on roughness/pdf
-      let D = DistributionGGX(N, H, roughness);
-      let NdotH = max(dot(N, H), 0.);
-      let HdotV = max(dot(H, V), 0.);
-      let pdf = D * NdotH / (4. * HdotV) + 0.0001;
+      //let D = DistributionGGX(N, H, roughness);
+      //let NdotH = max(dot(N, H), 0.);
+      //let HdotV = max(dot(H, V), 0.);
+      //let pdf = D * NdotH / (4. * HdotV) + 0.0001;
 
-      let resolution = pbrParams.inputTextureResolution; // Resolution of source cubemap (per face)
-      let saTexel = 4. * PI / (6. * resolution * resolution);
-      let saSample = 1. / (f32(SAMPLE_COUNT) * pdf + 0.0001);
+      //let resolution = pbrParams.inputTextureResolution; // Resolution of source cubemap (per face)
+      //let saTexel = 4. * PI / (6. * resolution * resolution);
+      //let saSample = 1. / (f32(SAMPLE_COUNT) * pdf + 0.0001);
 
-      let mipLevel = select(0.5 * log2(saSample / saTexel), 0., roughness == 0.);
+      //let mipLevel = select(0.5 * log2(saSample / saTexel), 0., roughness == 0.);
 
-      prefilteredColor += textureSampleLevel(cubeTexture, cubeSampler, L, mipLevel).rgb * NdotL;
+      prefilteredColor += sampleValue.rgb * NdotL;
       totalWeight += NdotL;
     }
   }

@@ -8,10 +8,6 @@
 
 namespace igdemo {
 
-struct CtxBrdfLut {
-  TextureWithMeta lut;
-};
-
 struct BRDFLutGenerator {
  public:
   static BRDFLutGenerator Create(const wgpu::Device& device,

@@ -41,6 +41,7 @@ struct CtxAnimatedPbrPipeline {
   wgpu::BindGroupLayout frame_bgl;
   wgpu::BindGroupLayout obj_bgl;
   wgpu::BindGroupLayout skin_bgl;
+  wgpu::BindGroupLayout ibl_bgl;
 
   //
   // Construction
@@ -50,8 +51,13 @@ struct CtxAnimatedPbrPipeline {
       const std::string& wgsl_igasset_name, const wgpu::Device& device);
 
   CtxAnimatedPbrPipeline(wgpu::RenderPipeline rp, wgpu::BindGroupLayout fbgl,
-                         wgpu::BindGroupLayout obgl, wgpu::BindGroupLayout sbgl)
-      : pipeline(rp), frame_bgl(fbgl), obj_bgl(obgl), skin_bgl(sbgl) {}
+                         wgpu::BindGroupLayout obgl, wgpu::BindGroupLayout sbgl,
+                         wgpu::BindGroupLayout iblbgl)
+      : pipeline(rp),
+        frame_bgl(fbgl),
+        obj_bgl(obgl),
+        skin_bgl(sbgl),
+        ibl_bgl(iblbgl) {}
 
   // Rule o' 5
   CtxAnimatedPbrPipeline(const CtxAnimatedPbrPipeline&) = delete;
@@ -71,6 +77,21 @@ struct AnimatedPbrFrameBindGroup {
                             const wgpu::BindGroupLayout& frame_bgl,
                             const wgpu::Buffer& cameraParamsBuffer,
                             const wgpu::Buffer& lightingParamsBuffer);
+};
+
+struct AnimatedPbrIblBindGroup {
+  wgpu::BindGroup bindGroup;
+
+  wgpu::Sampler iblSampler;
+  wgpu::TextureView irradianceMapView;
+  wgpu::TextureView prefilteredEnvView;
+  wgpu::TextureView brdfLutView;
+
+  AnimatedPbrIblBindGroup(const wgpu::Device& device,
+                          const wgpu::BindGroupLayout& ibl_bgl,
+                          const wgpu::Texture& irradianceMap,
+                          const wgpu::Texture& prefilteredEnvMap,
+                          const wgpu::Texture& brdfLut);
 };
 
 struct AnimatedPbrMaterial {

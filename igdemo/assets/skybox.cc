@@ -14,6 +14,7 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_skybox(
     const IgdemoProcTable& procs, entt::registry* r,
     std::string asset_root_path, const wgpu::Device& device,
     const wgpu::Queue& queue,
+    std::shared_ptr<igasync::Promise<bool>> pbr_shader_setup_promise,
     std::shared_ptr<igasync::ExecutionContext> main_thread_tasks,
     std::shared_ptr<igasync::ExecutionContext> compute_tasks) {
   auto wv = igecs::WorldView::Thin(r);
@@ -213,7 +214,7 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_skybox(
         tvd.arrayLayerCount = 6;
         tvd.baseArrayLayer = 0;
         tvd.baseMipLevel = 0;
-        tvd.mipLevelCount = 1;
+        tvd.mipLevelCount = skybox->texture.GetMipLevelCount();
         tvd.format = wgpu::TextureFormat::RGBA16Float;
         auto skyboxView = skybox->texture.CreateView(&tvd);
 
@@ -249,8 +250,8 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_skybox(
         tvd.arrayLayerCount = 6;
         tvd.baseArrayLayer = 0;
         tvd.baseMipLevel = 0;
-        tvd.mipLevelCount = 1;
-        tvd.format = wgpu::TextureFormat::RGBA16Float;
+        tvd.mipLevelCount = skybox->texture.GetMipLevelCount();
+        tvd.format = skybox->texture.GetFormat();
         auto cubemapView = skybox->texture.CreateView(&tvd);
 
         auto wv = igecs::WorldView::Thin(r);
@@ -285,7 +286,7 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_skybox(
         tvd.arrayLayerCount = 6;
         tvd.baseArrayLayer = 0;
         tvd.baseMipLevel = 0;
-        tvd.mipLevelCount = 1;
+        tvd.mipLevelCount = cubemap->texture.GetMipLevelCount();
         tvd.format = wgpu::TextureFormat::RGBA16Float;
         auto cubemapView = cubemap->texture.CreateView(&tvd);
 
@@ -306,16 +307,19 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_skybox(
       final_combiner->add_consuming(irradiance_gen_promise, main_thread_tasks);
   auto fc_prefilter_texture_key = final_combiner->add_consuming(
       prefilter_texture_promise, main_thread_tasks);
+  auto fc_pbr_shader_setup_key = final_combiner->add_consuming(
+      pbr_shader_setup_promise, main_thread_tasks);
 
   return final_combiner->combine(
-      [r, fc_skybox_cubemap_key, fc_skybox_pipeline_key, fc_brdf_key,
-       fc_irradiance_key, fc_prefilter_texture_key](
+      [r, device, fc_skybox_cubemap_key, fc_skybox_pipeline_key, fc_brdf_key,
+       fc_irradiance_key, fc_prefilter_texture_key, fc_pbr_shader_setup_key](
           igasync::PromiseCombiner::Result rsl) -> std::vector<std::string> {
         auto& skybox_cubemap_rsl = rsl.get(fc_skybox_cubemap_key);
         auto skybox_pipeline = rsl.move(fc_skybox_pipeline_key);
         auto brdf_tex = rsl.move(fc_brdf_key);
         auto irradiance_tex = rsl.move(fc_irradiance_key);
         auto prefilter_tex = rsl.move(fc_prefilter_texture_key);
+        auto is_pbr_shader_setup = rsl.get(fc_pbr_shader_setup_key);
 
         std::vector<std::string> errors;
 
@@ -339,11 +343,22 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_skybox(
           errors.push_back("PBR prefilter env map");
         }
 
+        if (!is_pbr_shader_setup) {
+          errors.push_back("No PBR shader is setup");
+        }
+
         if (errors.size() > 0) {
           return errors;
         }
 
         auto wv = igecs::WorldView::Thin(r);
+
+        const auto& pbr_pipeline = wv.ctx<CtxAnimatedPbrPipeline>();
+        auto ibl_bg =
+            AnimatedPbrIblBindGroup(device, pbr_pipeline.ibl_bgl,
+                                    irradiance_tex->irradianceCubemap.texture,
+                                    prefilter_tex->texture, brdf_tex->texture);
+
         wv.attach_ctx<CtxHdrSkybox>(CtxHdrSkybox{
             skybox_cubemap_rsl->texture,
             skybox_cubemap_rsl->texture.CreateView(),
@@ -351,9 +366,11 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_skybox(
             irradiance_tex->irradianceCubemap.texture.CreateView(),
             prefilter_tex->texture,
             prefilter_tex->texture.CreateView(),
+            brdf_tex->texture,
+            brdf_tex->texture.CreateView(),
+            ibl_bg,
         });
         wv.attach_ctx<BgSkyboxPipeline>(*std::move(skybox_pipeline));
-        wv.attach_ctx<CtxBrdfLut>(*brdf_tex);
 
         return errors;
       },

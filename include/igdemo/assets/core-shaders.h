@@ -11,7 +11,12 @@
 
 namespace igdemo {
 
-std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_core_shaders(
+struct LoadCoreShadersRslPromises {
+  std::shared_ptr<igasync::Promise<std::vector<std::string>>> result;
+  std::shared_ptr<igasync::Promise<bool>> pbrShaderLoaded;
+};
+
+LoadCoreShadersRslPromises load_core_shaders(
     const IgdemoProcTable& procs, entt::registry* r,
     std::string asset_root_path, const wgpu::Device& device,
     const wgpu::Queue& queue, wgpu::TextureFormat output_format,

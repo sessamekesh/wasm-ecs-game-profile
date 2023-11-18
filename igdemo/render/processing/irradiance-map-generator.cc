@@ -198,7 +198,14 @@ IrradianceCubemap IrradianceMapGenerator::generate(
   wgpu::RenderPassDescriptor rpds[] = {pxrpd, nxrpd, pyrpd,
                                        nyrpd, pzrpd, nzrpd};
 
-  wgpu::Sampler sampler = device.CreateSampler();
+  wgpu::SamplerDescriptor sd{};
+  sd.addressModeU = wgpu::AddressMode::ClampToEdge;
+  sd.addressModeV = wgpu::AddressMode::ClampToEdge;
+  sd.addressModeW = wgpu::AddressMode::ClampToEdge;
+  sd.minFilter = wgpu::FilterMode::Linear;
+  sd.magFilter = wgpu::FilterMode::Linear;
+  sd.mipmapFilter = wgpu::MipmapFilterMode::Nearest;
+  wgpu::Sampler sampler = device.CreateSampler(&sd);
 
   wgpu::BindGroupEntry samplerBge{};
   samplerBge.sampler = sampler;

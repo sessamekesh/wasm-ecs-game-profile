@@ -258,7 +258,7 @@ ConversionOutput EquirectangularToCubemapPipeline::convert(
   tvd.arrayLayerCount = 6;
   tvd.baseArrayLayer = 0;
   tvd.baseMipLevel = 0;
-  tvd.mipLevelCount = 1;
+  tvd.mipLevelCount = cubemap_desc.mipLevelCount;
   tvd.format = wgpu::TextureFormat::RGBA16Float;
 
   mip_gen.gen_cube_mips(device, queue, cubemap_texture, cubemap_face_width);

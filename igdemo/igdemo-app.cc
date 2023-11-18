@@ -67,11 +67,12 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
   // Load stuff from the network and initialize resources...
   auto combiner = igasync::PromiseCombiner::Create();
 
-  auto shaders_promise = load_core_shaders(
+  auto load_shaders_promises = load_core_shaders(
       proc_table, registry.get(), config.assetRootPath + "resources/",
       app_base->Device, app_base->Queue,
       app_base->preferred_swap_chain_texture_format(), main_thread_tasks,
       async_tasks);
+  auto& shaders_promise = load_shaders_promises.result;
   shaders_promise->on_resolve(
       [proc_table](const auto&) {
         proc_table.indicateProgress(LoadingProgressMark::CoreShadersLoaded);
@@ -95,7 +96,8 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
 
   auto load_skybox_promise = load_skybox(
       proc_table, registry.get(), config.assetRootPath + "resources/",
-      app_base->Device, app_base->Queue, main_thread_tasks, async_tasks);
+      app_base->Device, app_base->Queue, load_shaders_promises.pbrShaderLoaded,
+      main_thread_tasks, async_tasks);
   shaders_promise->on_resolve(
       [proc_table](const auto&) {
         proc_table.indicateProgress(LoadingProgressMark::SkyboxGenerated);

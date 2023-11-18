@@ -304,9 +304,9 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_ybot_resources(
         const auto& shader = wv.ctx<CtxAnimatedPbrPipeline>();
 
         CtxAnimatedPbrPipeline::GPUPbrColorParams rParams{};
-        rParams.albedo = glm::vec3(1.f, 0.f, 0.2f);
-        rParams.metallic = 0.85f;
-        rParams.roughness = 0.35f;
+        rParams.albedo = glm::vec3(1.f, 1.f, 1.f);
+        rParams.metallic = 1.f;
+        rParams.roughness = 0.f;
 
         CtxAnimatedPbrPipeline::GPUPbrColorParams gParams{};
         gParams.albedo = glm::vec3(0.f, 1.f, 0.2f);

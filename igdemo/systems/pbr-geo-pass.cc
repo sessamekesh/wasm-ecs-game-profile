@@ -1,3 +1,4 @@
+#include <igdemo/assets/skybox.h>
 #include <igdemo/render/camera.h>
 #include <igdemo/render/ctx-components.h>
 #include <igdemo/render/world-transform-component.h>
@@ -116,6 +117,7 @@ const igecs::WorldView::Decl& PbrGeoPassSystem::decl() {
           .ctx_reads<CtxWgpuDevice>()
           .ctx_writes<CtxGeneral3dBuffers>()
           .ctx_writes<CtxHdrPassOutput>()
+          .ctx_reads<CtxHdrSkybox>()
 
           // DEFINED BY SYSTEM
           .ctx_reads<CtxAnimatedPbrPipeline>()
@@ -136,6 +138,7 @@ void PbrGeoPassSystem::run(igecs::WorldView* wv) {
   const auto& dsView = wv->ctx<CtxHdrPassOutput>().dsView;
   const auto& ctxPipeline = wv->ctx<CtxAnimatedPbrPipeline>();
   const auto& ctxAnimatedPbrBindGroup = wv->ctx<AnimatedPbrFrameBindGroup>();
+  const auto& ctxSkybox = wv->ctx<CtxHdrSkybox>();
 
   const auto& device = ctxWgpuDevice.device;
   const auto& queue = ctxWgpuDevice.queue;
@@ -182,6 +185,7 @@ void PbrGeoPassSystem::run(igecs::WorldView* wv) {
                             geo->indexBufferSize);
         pass.SetBindGroup(1, mat->objBindGroup);
         pass.SetBindGroup(2, bg.skinBindGroup);
+        pass.SetBindGroup(3, ctxSkybox.iblBindGroup.bindGroup);
         pass.DrawIndexed(geo->numIndices);
       }
     }
