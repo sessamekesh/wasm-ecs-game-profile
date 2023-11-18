@@ -19,6 +19,9 @@ struct CtxHdrSkybox {
   wgpu::Texture irradianceMap;
   wgpu::TextureView irradianceMapView;
 
+  wgpu::Texture prefilterMap;
+  wgpu::TextureView prefilterMapView;
+
   // TODO (sessamekesh): Need the following generated things as well:
   // prefilter map
   // See:

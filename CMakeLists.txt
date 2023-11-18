@@ -43,6 +43,7 @@ set(igdemo_includes
   "include/igdemo/render/processing/equirect-to-cubemap.h"
   "include/igdemo/render/processing/gen-mips.h"
   "include/igdemo/render/processing/irradiance-map-generator.h"
+  "include/igdemo/render/processing/prefilter-env-gen.h"
   "include/igdemo/render/animated-pbr.h"
   "include/igdemo/render/bg-skybox.h"
   "include/igdemo/render/camera.h"
@@ -70,6 +71,7 @@ set(igdemo_sources
   "igdemo/render/processing/equirect-to-cubemap.cc"
   "igdemo/render/processing/gen-mips.cc"
   "igdemo/render/processing/irradiance-map-generator.cc"
+  "igdemo/render/processing/prefilter-env-gen.cc"
   "igdemo/render/animated-pbr.cc"
   "igdemo/render/bg-skybox.cc"
   "igdemo/render/ctx-components.cc"
@@ -139,6 +141,7 @@ BUILD_IG_ASSET_PACK_PLAN(
       "shaders/hdr_mipgen.wgsl"
       "shaders/equirect_to_cubemap.wgsl"
       "shaders/irradiance_gen.wgsl"
+      "shaders/prefilter_gen.wgsl"
       "industrial_sunset_02_puresky_2k.hdr"
     TARGET_OUTPUT_FILES
       "resources/skybox.igpack")

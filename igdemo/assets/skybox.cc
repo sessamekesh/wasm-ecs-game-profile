@@ -5,6 +5,7 @@
 #include <igdemo/render/geo/cube.h>
 #include <igdemo/render/processing/brdflut.h>
 #include <igdemo/render/processing/irradiance-map-generator.h>
+#include <igdemo/render/processing/prefilter-env-gen.h>
 #include <igdemo/render/wgpu-helpers.h>
 
 namespace igdemo {
@@ -223,6 +224,42 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_skybox(
       },
       main_thread_tasks);
 
+  auto prefilter_gen_combiner = igasync::PromiseCombiner::Create();
+  auto pgc_decoder_key =
+      prefilter_gen_combiner->add(igpack_decoder_promise, compute_tasks);
+  auto pgc_skybox_key =
+      prefilter_gen_combiner->add(skybox_cubemap_promise, main_thread_tasks);
+  auto prefilter_texture_promise = prefilter_gen_combiner->combine(
+      [device, queue, r, pgc_decoder_key,
+       pgc_skybox_key](igasync::PromiseCombiner::Result rsl)
+          -> std::optional<TextureWithMeta> {
+        const auto& decoder = rsl.get(pgc_decoder_key);
+        const auto& skybox = rsl.get(pgc_skybox_key);
+        if (!decoder || !skybox) return {};
+
+        auto wgsl_rsl = decoder->extract_wgsl_shader("prefilterGenWgsl");
+        if (std::holds_alternative<igasset::IgpackExtractError>(wgsl_rsl))
+          return {};
+
+        const auto* wgsl = std::get<const IgAsset::WgslSource*>(wgsl_rsl);
+        auto gen = PrefilteredEnvironmentMapGen::Create(device, queue, wgsl);
+
+        wgpu::TextureViewDescriptor tvd{};
+        tvd.dimension = wgpu::TextureViewDimension::Cube;
+        tvd.arrayLayerCount = 6;
+        tvd.baseArrayLayer = 0;
+        tvd.baseMipLevel = 0;
+        tvd.mipLevelCount = 1;
+        tvd.format = wgpu::TextureFormat::RGBA16Float;
+        auto cubemapView = skybox->texture.CreateView(&tvd);
+
+        auto wv = igecs::WorldView::Thin(r);
+        return gen.generate(device, queue, wv.ctx<CubemapUnitCube>(),
+                            cubemapView, skybox->width, 128,
+                            "skybox-prefilter-env-map");
+      },
+      main_thread_tasks);
+
   auto skybox_pipeline_combiner = igasync::PromiseCombiner::Create();
   auto spc_cubemap_key =
       skybox_pipeline_combiner->add(skybox_cubemap_promise, main_thread_tasks);
@@ -267,15 +304,18 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_skybox(
       final_combiner->add_consuming(brdf_lut_promise, main_thread_tasks);
   auto fc_irradiance_key =
       final_combiner->add_consuming(irradiance_gen_promise, main_thread_tasks);
+  auto fc_prefilter_texture_key = final_combiner->add_consuming(
+      prefilter_texture_promise, main_thread_tasks);
 
   return final_combiner->combine(
       [r, fc_skybox_cubemap_key, fc_skybox_pipeline_key, fc_brdf_key,
-       fc_irradiance_key](
+       fc_irradiance_key, fc_prefilter_texture_key](
           igasync::PromiseCombiner::Result rsl) -> std::vector<std::string> {
         auto& skybox_cubemap_rsl = rsl.get(fc_skybox_cubemap_key);
         auto skybox_pipeline = rsl.move(fc_skybox_pipeline_key);
         auto brdf_tex = rsl.move(fc_brdf_key);
         auto irradiance_tex = rsl.move(fc_irradiance_key);
+        auto prefilter_tex = rsl.move(fc_prefilter_texture_key);
 
         std::vector<std::string> errors;
 
@@ -295,6 +335,10 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_skybox(
           errors.push_back("Skybox irradiance lookup texture");
         }
 
+        if (!prefilter_tex) {
+          errors.push_back("PBR prefilter env map");
+        }
+
         if (errors.size() > 0) {
           return errors;
         }
@@ -305,6 +349,8 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_skybox(
             skybox_cubemap_rsl->texture.CreateView(),
             irradiance_tex->irradianceCubemap.texture,
             irradiance_tex->irradianceCubemap.texture.CreateView(),
+            prefilter_tex->texture,
+            prefilter_tex->texture.CreateView(),
         });
         wv.attach_ctx<BgSkyboxPipeline>(*std::move(skybox_pipeline));
         wv.attach_ctx<CtxBrdfLut>(*brdf_tex);

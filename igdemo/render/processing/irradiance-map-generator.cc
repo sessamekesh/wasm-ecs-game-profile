@@ -34,7 +34,7 @@ IrradianceMapGenerator IrradianceMapGenerator::Create(
   rpd.vertex.module = shader_module;
   rpd.vertex.bufferCount = 1;
   rpd.vertex.buffers = &vbl;
-  rpd.label = "brdf-lut-pipeline";
+  rpd.label = "irradiance-map-gen-pipeline";
   rpd.fragment = &fs;
   rpd.primitive.topology = wgpu::PrimitiveTopology::TriangleList;
   rpd.primitive.cullMode = wgpu::CullMode::None;
@@ -131,22 +131,6 @@ IrradianceCubemap IrradianceMapGenerator::generate(
                        wgpu::TextureUsage::TextureBinding;
   cubemap_desc.mipLevelCount = get_num_mips(texture_width);
   auto cubemap_texture = device.CreateTexture(&cubemap_desc);
-
-  glm::mat4 captureProjection =
-      glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-  glm::mat4 captureViews[] = {
-      glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f),
-                  glm::vec3(0.0f, -1.0f, 0.0f)),
-      glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f),
-                  glm::vec3(0.0f, -1.0f, 0.0f)),
-      glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f),
-                  glm::vec3(0.0f, 0.0f, 1.0f)),
-      glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f),
-                  glm::vec3(0.0f, 0.0f, -1.0f)),
-      glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f),
-                  glm::vec3(0.0f, -1.0f, 0.0f)),
-      glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f),
-                  glm::vec3(0.0f, -1.0f, 0.0f))};
 
   wgpu::TextureViewDescriptor pxd{};
   pxd.arrayLayerCount = 1;

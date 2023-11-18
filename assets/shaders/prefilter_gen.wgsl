@@ -68,6 +68,18 @@ fn ImportanceSampleGGX(Xi: vec2f, N: vec3f, roughness: f32) -> vec3f {
   return normalize(sampleVec);
 }
 
+fn DistributionGGX(N: vec3f, H: vec3f, roughness: f32) -> f32 {
+  let a = roughness * roughness;
+  let a2 = a * a;
+  let NdotH = max(dot(N, H), 0.);
+  let NdotH2 = NdotH * NdotH;
+
+  var denom = (NdotH2 * (a2 - 1.) + 1.);
+  denom = PI * denom * denom;
+
+  return a2 / denom;
+}
+
 @vertex
 fn vs(vin: VertexInput) -> FragmentInput {
   var out: FragmentInput;
