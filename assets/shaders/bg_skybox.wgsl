@@ -30,6 +30,7 @@ fn vs(vin: VertexInput) -> FragmentInput {
   var out: FragmentInput;
 
   out.world_pos = vin.vertex_position;
+  out.world_pos.y *= -1.;
 
   // set w=0 to only apply rotation (no camera position offset)
   let view_pos = cameraParams.mat_view * vec4(vin.vertex_position, 0.0);

@@ -199,6 +199,7 @@ std::variant<RawHdr, IgpackExtractError> IgpackDecoder::extract_raw_hdr(
       return IgpackExtractError::MalformedResourceData;
     }
 
+    stbi_set_flip_vertically_on_load(true);
     int width, height, num_channels;
     float* data = stbi_loadf_from_memory(hdr_raw_fb->bin()->data(),
                                          hdr_raw_fb->bin()->size(), &width,

@@ -204,7 +204,7 @@ IrradianceCubemap IrradianceMapGenerator::generate(
   sd.addressModeW = wgpu::AddressMode::ClampToEdge;
   sd.minFilter = wgpu::FilterMode::Linear;
   sd.magFilter = wgpu::FilterMode::Linear;
-  sd.mipmapFilter = wgpu::MipmapFilterMode::Nearest;
+  sd.mipmapFilter = wgpu::MipmapFilterMode::Linear;
   wgpu::Sampler sampler = device.CreateSampler(&sd);
 
   wgpu::BindGroupEntry samplerBge{};

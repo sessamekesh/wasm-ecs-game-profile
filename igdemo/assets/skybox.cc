@@ -163,7 +163,7 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_skybox(
         auto& skybox_hdr = *skybox_hdr_rsl;
         auto& equirect_to_cubemap = *equirect_to_cubemap_rsl;
 
-        const int kWidth = 1024;
+        const int kWidth = 512;
 
         auto wv = igecs::WorldView::Thin(r);
 

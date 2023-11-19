@@ -222,9 +222,17 @@ AnimatedPbrIblBindGroup::AnimatedPbrIblBindGroup(
     const wgpu::Device& device, const wgpu::BindGroupLayout& ibl_bgl,
     const wgpu::Texture& irradianceMap, const wgpu::Texture& prefilteredEnvMap,
     const wgpu::Texture& brdfLut) {
+  wgpu::SamplerDescriptor samplerDesc{};
+  samplerDesc.addressModeU = wgpu::AddressMode::ClampToEdge;
+  samplerDesc.addressModeV = wgpu::AddressMode::ClampToEdge;
+  samplerDesc.addressModeW = wgpu::AddressMode::ClampToEdge;
+  samplerDesc.mipmapFilter = wgpu::MipmapFilterMode::Linear;
+  samplerDesc.minFilter = wgpu::FilterMode::Linear;
+  samplerDesc.magFilter = wgpu::FilterMode::Linear;
+
   wgpu::BindGroupEntry samplerBge{};
   samplerBge.binding = 0;
-  samplerBge.sampler = device.CreateSampler();
+  samplerBge.sampler = device.CreateSampler(&samplerDesc);
 
   wgpu::TextureViewDescriptor irradianceMapViewDesc{};
   irradianceMapViewDesc.dimension = wgpu::TextureViewDimension::Cube;

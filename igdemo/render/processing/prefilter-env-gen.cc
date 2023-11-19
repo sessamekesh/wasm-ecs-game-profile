@@ -161,14 +161,12 @@ TextureWithMeta PrefilteredEnvironmentMapGen::generate(
   sbgd.layout = skyboxSamplerBgl_;
   wgpu::BindGroup samplerBindGroup = device.CreateBindGroup(&sbgd);
 
-  wgpu::CommandEncoder encoder = device.CreateCommandEncoder();
-
   struct AllPbrParams {
     float roughness;
     float inputTextureResolution;
   };
   AllPbrParams allPbrParams{};
-  allPbrParams.inputTextureResolution = input_texture_width;
+  allPbrParams.inputTextureResolution = 512;  // input_texture_width;
 
   auto pbr_params_buffer =
       create_buffer(device, queue, allPbrParams, wgpu::BufferUsage::Uniform,
@@ -259,6 +257,7 @@ TextureWithMeta PrefilteredEnvironmentMapGen::generate(
                       sizeof(AllPbrParams));
 
     for (int i = 0; i < 6; i++) {
+      wgpu::CommandEncoder encoder = device.CreateCommandEncoder();
       wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&rpds[i]);
       pass.SetPipeline(pipeline_);
       pass.SetBindGroup(0, cameraParamsBindGroups_[i]);
@@ -268,11 +267,10 @@ TextureWithMeta PrefilteredEnvironmentMapGen::generate(
                            cube_geo.vertexBuffer.size);
       pass.Draw(cube_geo.numVertices);
       pass.End();
+      auto commands = encoder.Finish();
+      queue.Submit(1, &commands);
     }
   }
-
-  auto commands = encoder.Finish();
-  queue.Submit(1, &commands);
 
   return TextureWithMeta{cubemap_texture, output_texture_width,
                          output_texture_width,

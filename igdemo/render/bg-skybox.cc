@@ -62,9 +62,17 @@ BgSkyboxPipeline BgSkyboxPipeline::Create(
 
   wgpu::BindGroup cameraParamsBg = device.CreateBindGroup(&cameraParamsBgd);
 
+  wgpu::SamplerDescriptor samplerDesc{};
+  samplerDesc.addressModeU = wgpu::AddressMode::ClampToEdge;
+  samplerDesc.addressModeV = wgpu::AddressMode::ClampToEdge;
+  samplerDesc.addressModeW = wgpu::AddressMode::ClampToEdge;
+  samplerDesc.mipmapFilter = wgpu::MipmapFilterMode::Linear;
+  samplerDesc.minFilter = wgpu::FilterMode::Linear;
+  samplerDesc.magFilter = wgpu::FilterMode::Linear;
+
   wgpu::BindGroupEntry samplerBge{};
   samplerBge.binding = 0;
-  samplerBge.sampler = device.CreateSampler();
+  samplerBge.sampler = device.CreateSampler(&samplerDesc);
 
   wgpu::BindGroupEntry texBge{};
   texBge.binding = 1;
