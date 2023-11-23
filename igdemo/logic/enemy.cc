@@ -5,7 +5,9 @@
 
 namespace igdemo::enemy {
 
-entt::entity create_enemy_entity(igecs::WorldView* wv, glm::vec2 startPos,
+entt::entity create_enemy_entity(igecs::WorldView* wv,
+                                 EnemyStrategy enemyStrategy,
+                                 std::uint32_t rngSeed, glm::vec2 startPos,
                                  float startOrientation, ModelType modelType,
                                  float modelScale) {
   auto e = wv->create();
@@ -19,6 +21,8 @@ entt::entity create_enemy_entity(igecs::WorldView* wv, glm::vec2 startPos,
       e, RenderableComponent{modelType, MaterialType::RED, AnimationType::IDLE,
                              modelScale});
   wv->attach<EnemyTag>(e);
+  wv->attach<EnemyStrategyComponent>(
+      e, EnemyStrategyComponent{enemyStrategy, rngSeed});
 
   return e;
 }

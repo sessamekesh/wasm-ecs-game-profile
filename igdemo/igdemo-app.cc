@@ -5,11 +5,14 @@
 #include <igdemo/igdemo-app.h>
 #include <igdemo/logic/enemy.h>
 #include <igdemo/logic/framecommon.h>
+#include <igdemo/logic/hero.h>
 #include <igdemo/render/camera.h>
 #include <igdemo/render/ctx-components.h>
 #include <igdemo/scheduler.h>
 #include <igdemo/systems/animation.h>
 #include <igdemo/systems/pbr-geo-pass.h>
+
+#include <random>
 
 namespace {
 
@@ -17,9 +20,9 @@ void create_main_camera(igecs::WorldView* wv) {
   auto e = wv->create();
   wv->attach<igdemo::CameraComponent>(
       e, igdemo::CameraComponent{/* position */
-                                 glm::vec3(0.f, 175.f, -150.f),
+                                 glm::vec3(0.f, 4.5f, -150.f),
                                  /* lookAt */
-                                 glm::vec3(0.f, 100.f, 0.f),
+                                 glm::vec3(0.f, 0.f, 0.f),
                                  /* up */
                                  glm::vec3(0.f, 1.f, 0.f),
                                  /* fovy */
@@ -60,9 +63,73 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
 
   // Setup logical level state...
   // TODO (sessamekesh): Generate from config
-  auto enemy =
-      enemy::create_enemy_entity(&wv, glm::vec2(0.f, 0.f), glm::radians(180.f),
-                                 igdemo::ModelType::YBOT, 1.f);
+  {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    gen.seed(config.rngSeed);
+    std::uniform_real_distribution<> pos_distribution(-200.f, 200.f);
+    std::uniform_int_distribution<> enemy_strategy_distribution(0, 2);
+    std::uniform_int_distribution<> hero_strategy_distribution(0, 2);
+    std::uniform_real_distribution<> rot_distribution(0.f, 3.14159f * 2.f);
+
+    for (int i = 0; i < config.numEnemyMobs; i++) {
+      glm::vec2 spawn_pos(pos_distribution(gen), pos_distribution(gen));
+      float orientation = rot_distribution(gen);
+      int strategy_int = enemy_strategy_distribution(gen);
+
+      EnemyStrategy strat;
+      switch (strategy_int) {
+        case 0:
+          strat = EnemyStrategy::BlitzNearestHero;
+          break;
+        case 1:
+          strat = EnemyStrategy::WanderLikeAChuckleFuck;
+          break;
+        case 2:
+        default:
+          strat = EnemyStrategy::RespondIfProvoked;
+          break;
+      }
+
+      enemy::create_enemy_entity(&wv, strat, config.rngSeed + i, spawn_pos,
+                                 orientation, igdemo::ModelType::YBOT, 0.01f);
+    }
+
+    for (int i = 0; i < config.numHeroes; i++) {
+      glm::vec2 spawn_pos(pos_distribution(gen), pos_distribution(gen));
+      float orientation = rot_distribution(gen);
+      int strategy_int = hero_strategy_distribution(gen);
+
+      HeroStrategy strat;
+      switch (strategy_int) {
+        case 0:
+          strat = HeroStrategy::KiteForDays;
+          break;
+        case 1:
+          strat = HeroStrategy::SprayNPray;
+          break;
+        case 2:
+        default:
+          strat = HeroStrategy::HoldYourGround;
+          break;
+      }
+
+      create_hero_entity(&wv, strat, config.rngSeed + i, spawn_pos, orientation,
+                         igdemo::ModelType::YBOT, 0.0175f);
+
+      // TODO (sessamekesh): Turn this instead into a camera follow system
+      if (i == 0) {
+        auto& cameraEntity = wv.mut_ctx<igdemo::CtxActiveCamera>();
+        auto& camera =
+            wv.write<igdemo::CameraComponent>(cameraEntity.activeCameraEntity);
+        camera.position.x = spawn_pos.x;
+        camera.position.z = spawn_pos.y + 10.f;
+
+        camera.lookAt.x = spawn_pos.x;
+        camera.lookAt.z = spawn_pos.y;
+      }
+    }
+  }
 
   // Load stuff from the network and initialize resources...
   auto combiner = igasync::PromiseCombiner::Create();
@@ -148,7 +215,6 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
         auto frame_execution_graph = rsl.move(frame_execution_graph_key);
         auto registry = rsl.move(reg_promise_key);
 
-        // TODO (sessamekesh): error handling
         proc_table.indicateProgress(LoadingProgressMark::AppLoadSuccess);
 
         auto app = std::unique_ptr<IgdemoApp>(

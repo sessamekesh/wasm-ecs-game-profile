@@ -304,9 +304,9 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_ybot_resources(
         const auto& shader = wv.ctx<CtxAnimatedPbrPipeline>();
 
         CtxAnimatedPbrPipeline::GPUPbrColorParams rParams{};
-        rParams.albedo = glm::vec3(1.f, 0.f, 0.f);
-        rParams.metallic = 1.f;
-        rParams.roughness = 0.85f;
+        rParams.albedo = glm::vec3(1.f, 0.05f, 0.15f);
+        rParams.metallic = 0.25f;
+        rParams.roughness = 0.15f;
 
         CtxAnimatedPbrPipeline::GPUPbrColorParams gParams{};
         gParams.albedo = glm::vec3(0.f, 1.f, 0.2f);
@@ -314,16 +314,16 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_ybot_resources(
         gParams.roughness = 0.95f;
 
         CtxAnimatedPbrPipeline::GPUPbrColorParams bParams{};
-        bParams.albedo = glm::vec3(0.f, 0.12f, 1.f);
-        bParams.metallic = 0.05f;
-        bParams.roughness = 0.75f;
+        bParams.albedo = glm::vec3(0.65f, 0.65f, 1.f);
+        bParams.metallic = 1.f;
+        bParams.roughness = 0.05f;
 
         wv.attach_ctx<CtxYbotResources>(CtxYbotResources{
             *std::move(defeated), *std::move(walk), *std::move(run),
             *std::move(idle), *std::move(skeleton), std::move(ybot_geometry),
             AnimatedPbrMaterial(device, queue, shader.obj_bgl, rParams),
-            AnimatedPbrMaterial(device, queue, shader.obj_bgl, gParams),
-            AnimatedPbrMaterial(device, queue, shader.obj_bgl, bParams)});
+            AnimatedPbrMaterial(device, queue, shader.obj_bgl, bParams),
+            AnimatedPbrMaterial(device, queue, shader.obj_bgl, gParams)});
 
         return {};
       },
