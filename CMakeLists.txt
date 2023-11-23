@@ -9,6 +9,7 @@ set(IG_TOOL_WRANGLE_PATH "${CMAKE_BINARY_DIR}/wrangle-tools.cmake" CACHE FILEPAT
 set(IG_TOOLS_BUILD "ON" CACHE BOOL "Build tools if this option is set to true")
 set(IG_ENABLE_ECS_VALIDATION "ON" CACHE BOOL "Include asserts that validate ECS concurrency safety (useful in debugging, but creates loud errors)")
 set(IG_ENABLE_WASM_THREADS "ON" CACHE BOOL "Build targets with threading support")
+set(IG_USE_PREBUILT_ASSETS "ON" CACHE BOOL "Use pre-generated asset packs - useful since not all targets can be built from distributed source")
 
 include(cmake/import_build_tools.cmake)
 include(cmake/gen_flatbuffer_cpp.cmake)
@@ -118,6 +119,8 @@ BUILD_IG_ASSET_PACK_PLAN(
       "run.fbx"
       "walk.fbx"
       "ybot-geo.fbx"
+    PREBUILT_PACK
+      "prebuilt/ybot.igpack"
     TARGET_OUTPUT_FILES
       "resources/ybot.igpack")
 

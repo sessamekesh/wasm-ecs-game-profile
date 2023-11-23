@@ -20,14 +20,10 @@
 # Input: Sentinel asset file(s) (used to indicate if the tool has run yet)
 function (build_ig_asset_pack_plan)
   set (options)
-  set(oneValueArgs PLAN TARGET_NAME INDIR OUTDIR)
+  set(oneValueArgs PLAN TARGET_NAME INDIR OUTDIR PREBUILT_PACK)
   set(multiValueArgs TARGET_OUTPUT_FILES INFILES)
   # hehe, bigpp
   cmake_parse_arguments(BIGPP "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-
-  if (NOT TARGET igpack-gen)
-    message(FATAL_ERROR "igpack-gen binary not available - this is usually because a tools build was not finished on WASM")
-  endif ()
 
   get_filename_component(plan_abs "${BIGPP_PLAN}" ABSOLUTE)
 
@@ -53,6 +49,22 @@ function (build_ig_asset_pack_plan)
     get_filename_component(in_abs "${tool_input_directory}/${TARGET_INFILE}" ABSOLUTE)
     list(APPEND target_inputs "${in_abs}")
   endforeach ()
+
+  if (IG_USE_PREBUILT_ASSETS AND BIGPP_PREBUILT_PACK AND EXISTS "${tool_input_directory}/${BIGPP_PREBUILT_PACK}")
+    get_filename_component(prebuild_abs "${tool_input_directory}/${BIGPP_PREBUILT_PACK}" ABSOLUTE)
+    add_custom_command(
+      OUTPUT ${target_outputs}
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${tool_output_directory}
+      COMMAND ${CMAKE_COMMAND} -E copy ${prebuild_abs} ${target_outputs}
+    )
+    add_custom_target(${BIGPP_TARGET_NAME} SOURCES ${target_outputs})
+    set_target_properties(${BIGPP_TARGET_NAME} PROPERTIES FOLDER assets)
+    return ()
+  endif ()
+
+  if (NOT TARGET igpack-gen)
+    message(FATAL_ERROR "igpack-gen binary not available - this is usually because a tools build was not finished on WASM")
+  endif ()
 
   add_custom_command(
     OUTPUT ${target_outputs}

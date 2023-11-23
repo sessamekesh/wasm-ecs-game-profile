@@ -125,6 +125,26 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
        app_base, main_thread_tasks,
        async_tasks](igasync::PromiseCombiner::Result rsl)
           -> std::variant<std::unique_ptr<IgdemoApp>, IgdemoLoadError> {
+        const auto& ybot_load_errors = rsl.get(ybot_load_errors_key);
+        const auto& shader_load_errors = rsl.get(shaders_load_errorskey);
+        const auto& skybox_load_errors = rsl.get(skybox_load_errorskey);
+
+        if (ybot_load_errors.size() > 0 || shader_load_errors.size() > 0 ||
+            skybox_load_errors.size() > 0) {
+          std::cerr << "Error loading scene!" << std::endl;
+          for (const auto& ybot_err : ybot_load_errors) {
+            std::cerr << "-- YBot: " << ybot_err << std::endl;
+          }
+          for (const auto& ybot_err : shader_load_errors) {
+            std::cerr << "-- Shader: " << ybot_err << std::endl;
+          }
+          for (const auto& ybot_err : skybox_load_errors) {
+            std::cerr << "-- Skybox: " << ybot_err << std::endl;
+          }
+          proc_table.indicateProgress(LoadingProgressMark::AppLoadFailed);
+          return nullptr;
+        }
+
         auto frame_execution_graph = rsl.move(frame_execution_graph_key);
         auto registry = rsl.move(reg_promise_key);
 
