@@ -105,14 +105,18 @@ struct SkinningParams {
 fn vs(vertex: VertexInput) -> VertexOutput {
   var out: VertexOutput;
 
-  let skin_transform = mat4x4f(
+  let skin_transform =
     vertex.bone_weights.x * skinMatrices.data[vertex.bone_indices.x] +
     vertex.bone_weights.y * skinMatrices.data[vertex.bone_indices.y] +
     vertex.bone_weights.z * skinMatrices.data[vertex.bone_indices.z] +
-    vertex.bone_weights.w * skinMatrices.data[vertex.bone_indices.w]);
+    vertex.bone_weights.w * skinMatrices.data[vertex.bone_indices.w];
 
-  out.world_pos = (matWorld * skin_transform * vec4f(vertex.position, 1.)).xyz;
-  out.world_normal = normalize((matWorld * skin_transform * vec4(normalize(vertex.normal), 0.))).xyz;
+  out.world_pos = (skin_transform * vec4f(vertex.position, 1.)).xyz;
+  out.world_pos = (matWorld * vec4f(out.world_pos.xyz, 1.)).xyz;
+
+  out.world_normal = (skin_transform * vec4f(normalize(vertex.normal), 0.)).xyz;
+  out.world_normal = normalize((matWorld * vec4f(out.world_normal, 0.)).xyz);
+
   out.frag_coord = cameraParams.mat_view_proj * vec4f(out.world_pos, 1.);
 
   return out;
