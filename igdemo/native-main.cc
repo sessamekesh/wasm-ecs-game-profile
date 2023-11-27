@@ -39,10 +39,10 @@ int main(int argc, char** argv) {
     cli.add_option("-e,--enemy_count", num_enemy_mobs,
                    "Number of enemy mobs to spawn around the world")
         ->default_val(100)
-        ->check(CLI::PositiveNumber);
+        ->check(CLI::NonNegativeNumber);
     cli.add_option("--hero_count", num_heroes)
         ->default_val(4)
-        ->check(CLI::PositiveNumber);
+        ->check(CLI::NonNegativeNumber);
     cli.add_option("--warmup_frames", warmup_frame_count)
         ->default_val(200)
         ->check(CLI::NonNegativeNumber);

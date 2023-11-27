@@ -34,8 +34,12 @@ void SkyboxRenderSystem::run(igecs::WorldView* wv) {
   float aspect_ratio = static_cast<float>(hdrOutParams.width) /
                        static_cast<float>(hdrOutParams.height);
 
+  auto fwd = glm::vec3(glm::cos(mainCamera.phi) * glm::sin(mainCamera.theta),
+                       glm::sin(mainCamera.phi),
+                       glm::cos(mainCamera.phi) * glm::cos(mainCamera.theta));
+  auto up = glm::vec3(0.f, 1.f, 0.f);
   glm::mat4 mat_view =
-      glm::lookAt(mainCamera.position, mainCamera.lookAt, mainCamera.up);
+      glm::lookAt(mainCamera.position, mainCamera.position + fwd, up);
   glm::mat4 mat_proj = glm::perspective(mainCamera.fovy, aspect_ratio,
                                         mainCamera.nearPlaneDistance,
                                         mainCamera.farPlaneDistance);

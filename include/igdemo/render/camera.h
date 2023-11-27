@@ -10,8 +10,8 @@ namespace igdemo {
 
 struct CameraComponent {
   glm::vec3 position;
-  glm::vec3 lookAt;
-  glm::vec3 up;
+  float theta;
+  float phi;
 
   float fovy;
   float nearPlaneDistance;

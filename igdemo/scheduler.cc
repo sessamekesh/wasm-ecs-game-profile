@@ -2,6 +2,7 @@
 #include <igdemo/scheduler.h>
 #include <igdemo/systems/animation.h>
 #include <igdemo/systems/attach-renderables.h>
+#include <igdemo/systems/fly-camera.h>
 #include <igdemo/systems/locomotion.h>
 #include <igdemo/systems/pbr-geo-pass.h>
 #include <igdemo/systems/skybox.h>
@@ -52,9 +53,13 @@ igecs::Scheduler build_update_and_render_scheduler(
           .depends_on(sample_ozz_animation)
           .build<TransformOzzAnimationToModelSpaceSystem>();
 
+  auto fly_camera =
+      builder.add_node().main_thread_only().build<FlyCameraSystem>();
+
   auto pbr_upload_scene_buffers =
       builder.add_node()
           .main_thread_only()
+          .depends_on(fly_camera)
           // TODO (sessamekesh): .depends_on update camera system
           .build<PbrUploadSceneBuffersSystem>();
 

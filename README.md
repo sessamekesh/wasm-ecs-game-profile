@@ -8,12 +8,12 @@ useful things that I decided to put it up anyways.
 
 TODO:
 
-[ ] Generate IBL maps for geometry in scene
-[ ] Logical locomotion system for enemies and heros
-[ ] Projectile system / collision systems
-[ ] Health systems / kill system for enemies
-[ ] Migrate loading to an igecs schedule (shudder) for better profiling data there
-[ ] indigocode.dev wasm-ecs-game-profile page pretty
+  [x] Generate IBL maps for geometry in scene
+  [ ] Logical locomotion system for enemies and heros
+  [ ] Projectile system / collision systems
+  [ ] Health systems / kill system for enemies
+  [ ] Migrate loading to an igecs schedule (shudder) for better profiling data there
+  [ ] indigocode.dev wasm-ecs-game-profile page pretty
 
 ## Building and Running (native binary)
 

@@ -6,6 +6,7 @@
 #include <igdemo/logic/enemy.h>
 #include <igdemo/logic/framecommon.h>
 #include <igdemo/logic/hero.h>
+#include <igdemo/platform/keyboard-mouse-input-emitter.h>
 #include <igdemo/render/camera.h>
 #include <igdemo/render/ctx-components.h>
 #include <igdemo/scheduler.h>
@@ -21,10 +22,10 @@ void create_main_camera(igecs::WorldView* wv) {
   wv->attach<igdemo::CameraComponent>(
       e, igdemo::CameraComponent{/* position */
                                  glm::vec3(0.f, 4.5f, -150.f),
-                                 /* lookAt */
-                                 glm::vec3(0.f, 0.f, 0.f),
-                                 /* up */
-                                 glm::vec3(0.f, 1.f, 0.f),
+                                 /* theta */
+                                 0.f,
+                                 /* phi */
+                                 0.f,
                                  /* fovy */
                                  glm::radians(85.f),
                                  /* nearPlane + farPlane */
@@ -60,6 +61,10 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
                             /* ambientCoefficient */ 0.0001f});
   wv.attach_ctx<CtxHdrPassOutput>(app_base->Device, app_base->Width,
                                   app_base->Height);
+
+  // I/O...
+  wv.attach_ctx<CtxInputEmitter>(CtxInputEmitter{
+      std::make_unique<KeyboardMouseInputEmitter>(app_base->Window)});
 
   // Setup logical level state...
   // TODO (sessamekesh): Generate from config
@@ -116,18 +121,6 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
 
       create_hero_entity(&wv, strat, config.rngSeed + i, spawn_pos, orientation,
                          igdemo::ModelType::YBOT, 0.0175f);
-
-      // TODO (sessamekesh): Turn this instead into a camera follow system
-      if (i == 0) {
-        auto& cameraEntity = wv.mut_ctx<igdemo::CtxActiveCamera>();
-        auto& camera =
-            wv.write<igdemo::CameraComponent>(cameraEntity.activeCameraEntity);
-        camera.position.x = spawn_pos.x;
-        camera.position.z = spawn_pos.y + 10.f;
-
-        camera.lookAt.x = spawn_pos.x;
-        camera.lookAt.z = spawn_pos.y;
-      }
     }
   }
 
