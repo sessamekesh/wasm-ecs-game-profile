@@ -12,10 +12,16 @@
 #include <igdemo/scheduler.h>
 #include <igdemo/systems/animation.h>
 #include <igdemo/systems/pbr-geo-pass.h>
+#include <igdemo/systems/update-spatial-index.h>
 
 #include <random>
 
 namespace {
+
+const float xMin = -80.f;
+const float xRange = 160.f;
+const float zMin = -80.f;
+const float zRange = 160.f;
 
 void create_main_camera(igecs::WorldView* wv) {
   auto e = wv->create();
@@ -61,6 +67,7 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
                             /* ambientCoefficient */ 0.0001f});
   wv.attach_ctx<CtxHdrPassOutput>(app_base->Device, app_base->Width,
                                   app_base->Height);
+  UpdateSpatialIndexSystem::init(&wv, xMin, xRange, zMin, zRange, 20);
 
   // I/O...
   wv.attach_ctx<CtxInputEmitter>(CtxInputEmitter{
@@ -72,13 +79,14 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
     std::random_device rd;
     std::mt19937 gen(rd());
     gen.seed(config.rngSeed);
-    std::uniform_real_distribution<> pos_distribution(-200.f, 200.f);
+    std::uniform_real_distribution<> x_pos_distribution(xMin, xMin + xRange);
+    std::uniform_real_distribution<> z_pos_distribution(zMin, zMin + zRange);
     std::uniform_int_distribution<> enemy_strategy_distribution(0, 2);
     std::uniform_int_distribution<> hero_strategy_distribution(0, 2);
     std::uniform_real_distribution<> rot_distribution(0.f, 3.14159f * 2.f);
 
     for (int i = 0; i < config.numEnemyMobs; i++) {
-      glm::vec2 spawn_pos(pos_distribution(gen), pos_distribution(gen));
+      glm::vec2 spawn_pos(x_pos_distribution(gen), z_pos_distribution(gen));
       float orientation = rot_distribution(gen);
       int strategy_int = enemy_strategy_distribution(gen);
 
@@ -101,7 +109,7 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
     }
 
     for (int i = 0; i < config.numHeroes; i++) {
-      glm::vec2 spawn_pos(pos_distribution(gen), pos_distribution(gen));
+      glm::vec2 spawn_pos(x_pos_distribution(gen), z_pos_distribution(gen));
       float orientation = rot_distribution(gen);
       int strategy_int = hero_strategy_distribution(gen);
 

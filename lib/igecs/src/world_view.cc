@@ -19,7 +19,6 @@ WorldView::WorldView(entt::registry* registry, Decl decl)
 }
 
 WorldView::Decl& WorldView::Decl::merge_in_decl(const WorldView::Decl& o) {
-#ifdef IG_ENABLE_ECS_VALIDATION
   for (int i = 0; i < o.reads_.size(); i++) {
     if (!::vec_contains(reads_, o.reads_[i])) {
       reads_.push_back(o.reads_[i]);
@@ -55,7 +54,6 @@ WorldView::Decl& WorldView::Decl::merge_in_decl(const WorldView::Decl& o) {
       evt_consumes_.push_back(o.evt_consumes_[i]);
     }
   }
-#endif
   return *this;
 }
 

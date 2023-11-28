@@ -2,11 +2,14 @@
 #include <igdemo/scheduler.h>
 #include <igdemo/systems/animation.h>
 #include <igdemo/systems/attach-renderables.h>
+#include <igdemo/systems/destroy-actor.h>
+#include <igdemo/systems/enemy-locomotion.h>
 #include <igdemo/systems/fly-camera.h>
 #include <igdemo/systems/locomotion.h>
 #include <igdemo/systems/pbr-geo-pass.h>
 #include <igdemo/systems/skybox.h>
 #include <igdemo/systems/tonemap-pass.h>
+#include <igdemo/systems/update-spatial-index.h>
 
 namespace igdemo {
 
@@ -22,15 +25,24 @@ igecs::Scheduler build_update_and_render_scheduler(
 
   // TODO (sessamekesh): System to update projectiles, spawn collision events
   // TODO (sessamekesh): System to handle projectile collision events
+  // TODO (sessamekesh): System to update heros based on strategy
   // TODO (sessamekesh): System to consume damage events, apply death
-  // TODO (sessamekesh): System to move around enemy mobs
-  // TODO (sessamekesh): System to decide hero action
-  // TODO (sessamekesh): System to fire hero projectiles
-  // TODO (sessamekesh): System to update world positions of entities
-  // TODO (sessamekesh): HDR render pass system
-  // TODO (sessamekesh): Finish implementation of tonemapping pass
 
-  auto locomotion = builder.add_node().build<LocomotionSystem>();
+  auto enemy_locomotion = builder.add_node().build<UpdateEnemiesSystem>();
+
+  auto locomotion =
+      builder.add_node().depends_on(enemy_locomotion).build<LocomotionSystem>();
+
+  auto update_spatial_index = builder.add_node()
+                                  .depends_on(enemy_locomotion)
+                                  .main_thread_only()
+                                  .build<UpdateSpatialIndexSystem>();
+
+  // Run at the end of the logic pass (but before rendering pass begins)
+  auto destroy_actors = builder.add_node()
+                            .main_thread_only()
+                            .depends_on(update_spatial_index)
+                            .build<DestroyActorSystem>();
 
   // This system serves as the transition between LOGICAL updates and
   //  RENDER updates - it attaches appropriate render resources to
@@ -38,6 +50,7 @@ igecs::Scheduler build_update_and_render_scheduler(
   auto attach_renderables = builder.add_node()
                                 .main_thread_only()
                                 .depends_on(locomotion)
+                                .depends_on(destroy_actors)
                                 .build<AttachRenderablesSystem>();
 
   auto advance_animation_time = builder.add_node()

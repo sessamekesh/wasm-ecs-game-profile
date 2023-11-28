@@ -29,6 +29,8 @@ function (set_wasm_target_properties)
       "SHELL:-s EXPORT_NAME=${AWT_EXPORT_NAME}")
   endif ()
 
+  target_compile_options(${AWT_TARGET_NAME} PUBLIC -msimd128 -msse2)
+
   if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(${AWT_TARGET_NAME} PUBLIC -gsource-map -O0)
     target_link_options(${AWT_TARGET_NAME} PRIVATE "SHELL:-gsource-map -O0")

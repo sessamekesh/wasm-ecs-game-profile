@@ -11,6 +11,10 @@ namespace igdemo::enemy {
 
 struct EnemyTag {};
 
+struct EnemyAggro {
+  entt::entity e;
+};
+
 entt::entity create_enemy_entity(igecs::WorldView* wv,
                                  EnemyStrategy enemyStrategy,
                                  std::uint32_t rngSeed, glm::vec2 startPos,

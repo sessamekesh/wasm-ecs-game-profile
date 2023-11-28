@@ -21,11 +21,13 @@ std::string trim_type_name_msvc(const char* tn) {
 }
 
 std::string trim_type_name_clang(const char* tn) {
-  const size_t off = 58;
+  const size_t off = 53;
   const size_t tail = 1;
 
   std::string stn(tn);
-  return stn.substr(off, stn.length() - off - tail);
+  std::string w_class_or_struct = stn.substr(off, stn.length() - off - tail);
+
+  return w_class_or_struct;
 }
 
 }  // namespace
@@ -35,6 +37,12 @@ namespace igecs {
 struct CttiTypeId {
  private:
   static inline std::string empty_str = "";
+
+  template <typename T>
+  static uint32_t tid() {
+    static uint32_t tid = next_type_id_++;
+    return tid;
+  }
 
  public:
   uint32_t id;
@@ -49,14 +57,12 @@ struct CttiTypeId {
 
   template <typename T>
   static CttiTypeId of() {
-    static uint32_t tid = next_type_id_++;
     static std::string name = CttiTypeId::GetName<T>();
-    return CttiTypeId{tid, name};
+    return CttiTypeId{CttiTypeId::tid<T>(), name};
   }
 
   template <typename T>
   static std::string GetName() {
-#ifdef IG_ENABLE_ECS_VALIDATION
 #ifdef _MSC_VER
     return trim_type_name_msvc(__FUNCSIG__);
 #elif __clang__
@@ -64,11 +70,6 @@ struct CttiTypeId {
 #else
 #error \
     "CTTI pretty names not supported by this compiler - disable IG_ENABLE_ECS_VALIDATION"
-#endif
-#else
-    // If no validation is built in, just return something silly like this (at
-    // least it's uniquely identifying)
-    return std::string("T-") + std::to_string(CttiTypeId::of<T>().id);
 #endif
   }
 

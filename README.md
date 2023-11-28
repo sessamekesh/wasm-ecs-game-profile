@@ -1,6 +1,8 @@
 # wasm-ecs-game-profile
 Demo - excerpt of a bullet-heaven game with profiling to compare WebAssembly and native builds of a game.
 
+Live demo (of the WIP version of this repo) - [https://indigocode.dev/demos/wasm-ecs-game-profile](https://indigocode.dev/demos/wasm-ecs-game-profile)
+
 ## UNDER CONSTRUCTION
 
 I wasn't originally planning to make this repo public this soon, but the half-complete version has enough
@@ -10,10 +12,10 @@ TODO:
 
   [x] Generate IBL maps for geometry in scene
   [ ] Logical locomotion system for enemies and heros
-  [ ] Projectile system / collision systems
-  [ ] Health systems / kill system for enemies
+  [ ] Projectile system
+  [ ] Combat system
   [ ] Migrate loading to an igecs schedule (shudder) for better profiling data there
-  [ ] indigocode.dev wasm-ecs-game-profile page pretty
+  [ ] Make indigocode.dev wasm-ecs-game-profile page pretty
 
 ## Building and Running (native binary)
 
@@ -46,11 +48,18 @@ emsdk activate latest
 emsdk_env
 ```
 
+Draco wants the `EMSCRIPTEN` environment variable to be set to your Emscripten installation location too,
+for some reason. I use Windows, so I had to run this:
+
+```powershell
+$env:EMSCRIPTEN="C:\whatever_root_dir\emsdk"
+```
+
 With tools built, WASM builds can be run.
 
 ```bash
 mkdir out/wasm && cd out/wasm
-emcmake cmake -DIG_TOOL_WRANGLE_PATH="../native/wrangle-tools.cmake" ../..
+emcmake cmake -DIG_TOOL_WRANGLE_PATH="../native/wrangle-tools.cmake" -DIG_ENABLE_WASM_THREADS=1 -DIG_ENABLE_ECS_VALIDATION=0 -DCMAKE_BUILD_TYPE="Release" ../..
 emmake make igdemo
 ```
 
