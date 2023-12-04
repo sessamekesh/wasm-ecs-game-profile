@@ -1,5 +1,6 @@
 #include <igdemo/logic/enemy.h>
 #include <igdemo/logic/framecommon.h>
+#include <igdemo/logic/levelmetadata.h>
 #include <igdemo/logic/locomotion.h>
 #include <igdemo/logic/projectile.h>
 #include <igdemo/logic/renderable.h>
@@ -7,11 +8,15 @@
 #include <igdemo/systems/enemy-locomotion.h>
 
 #include <glm/gtx/norm.hpp>
+#include <random>
 
 namespace {
-const float kEnemyProvokedMovementSpeed = 3.f;
+
+const float kEnemyProvokedMovementSpeed = 7.4f;
 const float kProvokedProjectileCd = 0.35f;
 const float kProvokedProjectileSpeed = 0.15f;
+
+const float kChucklefuckWanderSpeed = 1.5f;
 
 struct ProjectileFireCooldown {
   float timeRemaining;
@@ -19,11 +24,8 @@ struct ProjectileFireCooldown {
 
 struct NextChucklefuckWanderLocation {
   int rng_seed;
-  int enemy_offset;
-  int location_offset;
-
+  int location_rng_offset;
   glm::vec2 map_position;
-  float orientation;
 };
 
 }  // namespace
@@ -35,6 +37,7 @@ const igecs::WorldView::Decl& UpdateEnemiesSystem::decl() {
       igecs::WorldView::Decl()
           .ctx_reads<CtxSpatialIndex>()
           .ctx_reads<CtxFrameTime>()
+          .ctx_reads<CtxLevelMetadata>()
           .evt_writes<EvtSpawnProjectile>()
           .reads<enemy::EnemyTag>()
           .reads<enemy::EnemyAggro>()
@@ -52,7 +55,7 @@ static void maybe_set_animation_state(igecs::WorldView* wv, entt::entity e,
                                       AnimationType animation_type) {
   if (wv->has<RenderableComponent>(e)) {
     auto& renderable = wv->write<RenderableComponent>(e);
-    renderable.animation = AnimationType::IDLE;
+    renderable.animation = animation_type;
   }
 }
 
@@ -81,7 +84,7 @@ static void enemy_respond_if_provoked(igecs::WorldView* wv, entt::entity e,
   auto to_enemy_dir = to_enemy / glm::max(to_enemy_len, 0.001f);
 
   // Approach hero
-  orientation.radAngle = glm::atan(to_enemy_dir.y, to_enemy_dir.x);
+  orientation.radAngle = glm::atan(to_enemy_dir.x, to_enemy_dir.y);
   pos.map_position +=
       to_enemy_dir * glm::min(dt * kEnemyProvokedMovementSpeed, to_enemy_len);
   maybe_set_animation_state(wv, e, AnimationType::RUN);
@@ -109,12 +112,54 @@ static void enemy_blitz(igecs::WorldView* wv, entt::entity e,
                         PositionComponent& pos,
                         OrientationComponent& orientation) {}
 
-static void enemy_wander(igecs::WorldView* wv, entt::entity e,
-                         PositionComponent& pos,
+static void enemy_wander(igecs::WorldView* wv, entt::entity e, float dt,
+                         std::uint32_t rngBase, PositionComponent& pos,
                          OrientationComponent& orientation) {
-  // TODO (sessamekesh): Attach chucklefuck wander entity if not present.
-  // TODO (sessamekesh): Get RNG seed and map bounds from a new context value
-  // TODO (sessamekesh): Approach the next location - if reached, create new one
+  const auto& ctxLvlMetadata = wv->ctx<CtxLevelMetadata>();
+
+  if (!wv->has<NextChucklefuckWanderLocation>(e)) {
+    NextChucklefuckWanderLocation wl{};
+    // TODO (sessamekesh): Add another offset here based on entity ID or
+    // something?
+    wl.rng_seed = rngBase + 1234;
+    wl.location_rng_offset = 0;
+    wl.map_position = pos.map_position;
+    wv->attach<NextChucklefuckWanderLocation>(e, wl);
+  }
+
+  auto& wander_location = wv->write<NextChucklefuckWanderLocation>(e);
+
+  float distance = kChucklefuckWanderSpeed * dt;
+  glm::vec2 toDest = wander_location.map_position - pos.map_position;
+  float distToDest = glm::length(toDest);
+  glm::vec2 dirToDest = toDest / glm::max(distToDest, 0.001f);
+
+  while (distToDest <= distance) {
+    distance -= distToDest;
+    pos.map_position = wander_location.map_position;
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    gen.seed(wander_location.rng_seed + wander_location.location_rng_offset);
+    std::uniform_real_distribution<> x_pos_distribution(
+        ctxLvlMetadata.mapXMin,
+        ctxLvlMetadata.mapXMin + ctxLvlMetadata.mapXRange);
+    std::uniform_real_distribution<> z_pos_distribution(
+        ctxLvlMetadata.mapZMin,
+        ctxLvlMetadata.mapZMin + ctxLvlMetadata.mapZRange);
+
+    wander_location.location_rng_offset++;
+    wander_location.map_position.x = x_pos_distribution(gen);
+    wander_location.map_position.y = x_pos_distribution(gen);
+
+    toDest = wander_location.map_position - pos.map_position;
+    distToDest = glm::length(toDest);
+    dirToDest = toDest / glm::max(distToDest, 0.001f);
+  }
+
+  pos.map_position += dirToDest * distance;
+  orientation.radAngle = glm::atan(dirToDest.x, dirToDest.y);
+  maybe_set_animation_state(wv, e, AnimationType::WALK);
 }
 
 void UpdateEnemiesSystem::run(igecs::WorldView* wv) {
@@ -133,7 +178,7 @@ void UpdateEnemiesSystem::run(igecs::WorldView* wv) {
         break;
       case EnemyStrategy::WanderLikeAChuckleFuck:
       default:
-        enemy_wander(wv, e, pos, orientation);
+        enemy_wander(wv, e, dt, strategy.rngSeed, pos, orientation);
     }
   }
 }

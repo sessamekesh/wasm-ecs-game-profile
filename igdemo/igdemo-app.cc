@@ -6,6 +6,7 @@
 #include <igdemo/logic/enemy.h>
 #include <igdemo/logic/framecommon.h>
 #include <igdemo/logic/hero.h>
+#include <igdemo/logic/levelmetadata.h>
 #include <igdemo/platform/keyboard-mouse-input-emitter.h>
 #include <igdemo/render/camera.h>
 #include <igdemo/render/ctx-components.h>
@@ -67,6 +68,8 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
                             /* ambientCoefficient */ 0.0001f});
   wv.attach_ctx<CtxHdrPassOutput>(app_base->Device, app_base->Width,
                                   app_base->Height);
+  wv.attach_ctx<CtxLevelMetadata>(
+      igdemo::CtxLevelMetadata{xMin, xRange, zMin, zRange, config.rngSeed});
   UpdateSpatialIndexSystem::init(&wv, xMin, xRange, zMin, zRange, 20);
 
   // I/O...

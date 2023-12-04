@@ -38,6 +38,7 @@ set(igdemo_includes
   "include/igdemo/logic/enemy.h"
   "include/igdemo/logic/framecommon.h"
   "include/igdemo/logic/hero.h"
+  "include/igdemo/logic/levelmetadata.h"
   "include/igdemo/logic/locomotion.h"
   "include/igdemo/logic/projectile.h"
   "include/igdemo/logic/renderable.h"
