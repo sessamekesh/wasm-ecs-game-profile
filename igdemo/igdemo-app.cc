@@ -85,7 +85,7 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
     std::uniform_real_distribution<> x_pos_distribution(xMin, xMin + xRange);
     std::uniform_real_distribution<> z_pos_distribution(zMin, zMin + zRange);
     std::uniform_int_distribution<> enemy_strategy_distribution(0, 2);
-    std::uniform_int_distribution<> hero_strategy_distribution(0, 2);
+    std::uniform_int_distribution<> hero_strategy_distribution(0, 1);
     std::uniform_real_distribution<> rot_distribution(0.f, 3.14159f * 2.f);
 
     for (int i = 0; i < config.numEnemyMobs; i++) {
@@ -122,11 +122,8 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
           strat = HeroStrategy::KiteForDays;
           break;
         case 1:
-          strat = HeroStrategy::SprayNPray;
-          break;
-        case 2:
         default:
-          strat = HeroStrategy::HoldYourGround;
+          strat = HeroStrategy::SprayNPray;
           break;
       }
 

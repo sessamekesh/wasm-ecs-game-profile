@@ -2,6 +2,7 @@
 #define IGDEMO_RENDER_ANIMATED_PBR_H
 
 #include <igasset/igpack_decoder.h>
+#include <igdemo/render/pbr-common.h>
 #include <igecs/world_view.h>
 #include <webgpu/webgpu_cpp.h>
 
@@ -11,29 +12,6 @@ namespace igdemo {
 
 struct CtxAnimatedPbrPipeline {
  public:
-  //
-  // GPU UBO types
-  //
-  struct GPUCameraParams {
-    glm::mat4 matViewProj;
-    glm::vec3 cameraPos;
-    float __padding_1__ = 0.f;
-  };
-
-  struct GPULightingParams {
-    glm::vec3 sunColor;
-    float ambientCoefficient;
-    glm::vec3 sunDirection;
-    float __padding_1__ = 0.f;
-  };
-
-  struct GPUPbrColorParams {
-    glm::vec3 albedo;
-    float metallic;
-    float roughness;
-    float __padding__[3] = {0.f, 0.f, 0.f};
-  };
-
   //
   // Context component data
   //
@@ -98,10 +76,9 @@ struct AnimatedPbrMaterial {
   wgpu::BindGroup objBindGroup;
   wgpu::Buffer materialBuffer;
 
-  AnimatedPbrMaterial(
-      const wgpu::Device& device, const wgpu::Queue& queue,
-      const wgpu::BindGroupLayout& obj_bgl,
-      const CtxAnimatedPbrPipeline::GPUPbrColorParams& material);
+  AnimatedPbrMaterial(const wgpu::Device& device, const wgpu::Queue& queue,
+                      const wgpu::BindGroupLayout& obj_bgl,
+                      const pbr::GPUPbrColorParams& material);
 };
 
 struct AnimatedPbrGeometry {

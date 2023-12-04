@@ -11,7 +11,6 @@ namespace igdemo {
 enum class HeroStrategy {
   KiteForDays,
   SprayNPray,
-  HoldYourGround,
 };
 
 struct HeroStrategyComponent {

@@ -15,12 +15,10 @@ struct CtxWgpuDevice {
 
 struct CtxGeneral3dBuffers {
   CtxGeneral3dBuffers(const wgpu::Device& device, const wgpu::Queue& queue);
-  void update_camera(
-      const wgpu::Queue& queue,
-      const CtxAnimatedPbrPipeline::GPUCameraParams& camera_params);
-  void update_lighting(
-      const wgpu::Queue& queue,
-      const CtxAnimatedPbrPipeline::GPULightingParams& lighting_params);
+  void update_camera(const wgpu::Queue& queue,
+                     const pbr::GPUCameraParams& camera_params) const;
+  void update_lighting(const wgpu::Queue& queue,
+                       const pbr::GPULightingParams& lighting_params) const;
 
   wgpu::Buffer cameraBuffer;
   wgpu::Buffer lightingBuffer;

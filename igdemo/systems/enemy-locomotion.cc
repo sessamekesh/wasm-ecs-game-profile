@@ -18,9 +18,7 @@ const float kProvokedProjectileSpeed = 0.15f;
 
 const float kChucklefuckWanderSpeed = 1.5f;
 
-struct ProjectileFireCooldown {
-  float timeRemaining;
-};
+const float kBlitzingSpeed = 9.f;
 
 struct NextChucklefuckWanderLocation {
   int rng_seed;
@@ -38,14 +36,13 @@ const igecs::WorldView::Decl& UpdateEnemiesSystem::decl() {
           .ctx_reads<CtxSpatialIndex>()
           .ctx_reads<CtxFrameTime>()
           .ctx_reads<CtxLevelMetadata>()
-          .evt_writes<EvtSpawnProjectile>()
           .reads<enemy::EnemyTag>()
           .reads<enemy::EnemyAggro>()
           .reads<EnemyStrategyComponent>()
           .writes<RenderableComponent>()
           .writes<PositionComponent>()
           .writes<OrientationComponent>()
-          .writes<ProjectileFireCooldown>()
+          .writes<ProjectileFiringIntent>()
           .writes<NextChucklefuckWanderLocation>();
 
   return d;
@@ -90,27 +87,41 @@ static void enemy_respond_if_provoked(igecs::WorldView* wv, entt::entity e,
   maybe_set_animation_state(wv, e, AnimationType::RUN);
 
   // Fire projectile
-  if (!wv->has<ProjectileFireCooldown>(e)) {
-    wv->attach<ProjectileFireCooldown>(e, ProjectileFireCooldown{0.f});
-  }
-  auto& cooldown = wv->write<ProjectileFireCooldown>(e);
-  cooldown.timeRemaining -= dt;
-  if (cooldown.timeRemaining < 0.f) {
-    cooldown.timeRemaining = kProvokedProjectileCd;
-    Projectile projectile{};
-    projectile.source = e;
-    projectile.pos = pos.map_position;
-    projectile.type = ProjectileSource::Enemy;
-    projectile.velocity = to_enemy_dir * kProvokedProjectileSpeed;
-
-    wv->enqueue_event(EvtSpawnProjectile{projectile});
-  }
+  wv->attach_or_replace<ProjectileFiringIntent>(
+      e, ProjectileFiringIntent{enemy_position});
 }
 
-static void enemy_blitz(igecs::WorldView* wv, entt::entity e,
+static void enemy_blitz(igecs::WorldView* wv, entt::entity e, float dt,
                         const CtxSpatialIndex& spatial_index,
                         PositionComponent& pos,
-                        OrientationComponent& orientation) {}
+                        OrientationComponent& orientation) {
+  auto optNeighborEntity =
+      spatial_index.heroIndex.nearest_neighbor(wv, pos.map_position);
+
+  if (!optNeighborEntity || !wv->valid(*optNeighborEntity) ||
+      !wv->has<PositionComponent>(*optNeighborEntity)) {
+    // Nobody to approach, just hang out
+    maybe_set_animation_state(wv, e, AnimationType::IDLE);
+    return;
+  }
+
+  const auto& neighborEntity = *optNeighborEntity;
+  const auto& heroPos = wv->read<PositionComponent>(neighborEntity);
+
+  // Approach hero quickly
+  auto to_enemy = heroPos.map_position - pos.map_position;
+  auto to_enemy_len = glm::length(to_enemy);
+  auto to_enemy_dir = to_enemy / glm::max(to_enemy_len, 0.001f);
+
+  orientation.radAngle = glm::atan(to_enemy_dir.x, to_enemy_dir.y);
+  pos.map_position +=
+      to_enemy_dir * glm::min(dt * kBlitzingSpeed, to_enemy_len);
+  maybe_set_animation_state(wv, e, AnimationType::RUN);
+
+  // Fire projectile
+  wv->attach_or_replace<ProjectileFiringIntent>(
+      e, ProjectileFiringIntent{heroPos.map_position});
+}
 
 static void enemy_wander(igecs::WorldView* wv, entt::entity e, float dt,
                          std::uint32_t rngBase, PositionComponent& pos,
@@ -174,7 +185,7 @@ void UpdateEnemiesSystem::run(igecs::WorldView* wv) {
         enemy_respond_if_provoked(wv, e, dt, pos, orientation);
         break;
       case EnemyStrategy::BlitzNearestHero:
-        enemy_blitz(wv, e, ctxSpatialIndex, pos, orientation);
+        enemy_blitz(wv, e, dt, ctxSpatialIndex, pos, orientation);
         break;
       case EnemyStrategy::WanderLikeAChuckleFuck:
       default:

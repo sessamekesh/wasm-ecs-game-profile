@@ -1,6 +1,7 @@
 #include <igdemo/assets/skybox.h>
 #include <igdemo/render/camera.h>
 #include <igdemo/render/ctx-components.h>
+#include <igdemo/render/static-pbr.h>
 #include <igdemo/render/world-transform-component.h>
 #include <igdemo/systems/pbr-geo-pass.h>
 
@@ -113,6 +114,28 @@ bool PbrGeoPassSystem::setup_animated(
   return true;
 }
 
+bool PbrGeoPassSystem::setup_static(const wgpu::Device& device,
+                                    igecs::WorldView* wv,
+                                    const igasset::IgpackDecoder& decoder,
+                                    const std::string& igasset_name) {
+  auto pipeline = CtxStaticPbrPipeline::Create(decoder, igasset_name, device);
+
+  if (!pipeline) {
+    return false;
+  }
+
+  const auto& generalBuffers = wv->ctx<CtxGeneral3dBuffers>();
+
+  auto& ctxPipeline =
+      wv->attach_ctx<CtxStaticPbrPipeline>(*std::move(pipeline));
+
+  wv->attach_ctx<StaticPbrFrameBindGroup>(device, ctxPipeline.frame_bgl,
+                                          generalBuffers.cameraBuffer,
+                                          generalBuffers.lightingBuffer);
+
+  return true;
+}
+
 const igecs::WorldView::Decl& PbrGeoPassSystem::decl() {
   static igecs::WorldView::Decl decl =
       igecs::WorldView::Decl()
@@ -125,9 +148,13 @@ const igecs::WorldView::Decl& PbrGeoPassSystem::decl() {
 
           // DEFINED BY SYSTEM
           .ctx_reads<CtxAnimatedPbrPipeline>()
+          .ctx_reads<CtxStaticPbrPipeline>()
           .ctx_reads<AnimatedPbrFrameBindGroup>()
+          .ctx_reads<StaticPbrFrameBindGroup>()
 
           // COMPONENT ITERATORS
+          .reads<StaticPbrInstance>()
+          .reads<StaticPbrModelBindGroup>()
           .reads<AnimatedPbrInstance>()
           .reads<AnimatedPbrSkinBindGroup>();
 
@@ -141,7 +168,9 @@ void PbrGeoPassSystem::run(igecs::WorldView* wv) {
   const auto& hdrOutView = wv->ctx<CtxHdrPassOutput>().hdrColorTextureView;
   const auto& dsView = wv->ctx<CtxHdrPassOutput>().dsView;
   const auto& ctxPipeline = wv->ctx<CtxAnimatedPbrPipeline>();
+  const auto& ctxStaticPipeline = wv->ctx<CtxStaticPbrPipeline>();
   const auto& ctxAnimatedPbrBindGroup = wv->ctx<AnimatedPbrFrameBindGroup>();
+  const auto& ctxStaticPbrBindGroup = wv->ctx<StaticPbrFrameBindGroup>();
   const auto& ctxSkybox = wv->ctx<CtxHdrSkybox>();
 
   const auto& device = ctxWgpuDevice.device;
@@ -171,9 +200,31 @@ void PbrGeoPassSystem::run(igecs::WorldView* wv) {
   {
     wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&rpd);
 
+    // Static
+    pass.SetPipeline(ctxStaticPipeline.pipeline);
+    pass.SetBindGroup(0, ctxStaticPbrBindGroup.frameBindGroup);
+    pass.SetBindGroup(3, ctxSkybox.iblBindGroup.bindGroup);
+    {
+      auto view =
+          wv->view<const StaticPbrInstance, const StaticPbrModelBindGroup>();
+
+      for (auto [e, instance, bg] : view.each()) {
+        const auto* geo = instance.geometry;
+        const auto* mat = instance.material;
+
+        pass.SetVertexBuffer(0, geo->vertexBuffer, 0, geo->vertexBufferSize);
+        pass.SetIndexBuffer(geo->indexBuffer, geo->indexFormat, 0,
+                            geo->indexBufferSize);
+        pass.SetBindGroup(1, mat->objBindGroup);
+        pass.SetBindGroup(2, bg.bindGroup);
+        pass.DrawIndexed(geo->numIndices);
+      }
+    }
+
+    // Animated
     pass.SetPipeline(ctxPipeline.pipeline);
     pass.SetBindGroup(0, ctxAnimatedPbrBindGroup.frameBindGroup);
-
+    pass.SetBindGroup(3, ctxSkybox.iblBindGroup.bindGroup);
     {
       auto view =
           wv->view<const AnimatedPbrInstance, const AnimatedPbrSkinBindGroup>();
@@ -189,7 +240,6 @@ void PbrGeoPassSystem::run(igecs::WorldView* wv) {
                             geo->indexBufferSize);
         pass.SetBindGroup(1, mat->objBindGroup);
         pass.SetBindGroup(2, bg.skinBindGroup);
-        pass.SetBindGroup(3, ctxSkybox.iblBindGroup.bindGroup);
         pass.DrawIndexed(geo->numIndices);
       }
     }

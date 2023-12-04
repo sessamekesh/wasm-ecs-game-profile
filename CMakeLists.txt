@@ -56,7 +56,9 @@ set(igdemo_includes
   "include/igdemo/render/bg-skybox.h"
   "include/igdemo/render/camera.h"
   "include/igdemo/render/ctx-components.h"
+  "include/igdemo/render/pbr-common.h"
   "include/igdemo/render/skeletal-animation.h"
+  "include/igdemo/render/static-pbr.h"
   "include/igdemo/render/wgpu-helpers.h"
   "include/igdemo/render/world-transform-component.h"
   "include/igdemo/systems/animation.h"
@@ -64,6 +66,7 @@ set(igdemo_includes
   "include/igdemo/systems/destroy-actor.h"
   "include/igdemo/systems/enemy-locomotion.h"
   "include/igdemo/systems/fly-camera.h"
+  "include/igdemo/systems/hero-locomotion.h"
   "include/igdemo/systems/locomotion.h"
   "include/igdemo/systems/pbr-geo-pass.h"
   "include/igdemo/systems/skybox.h"
@@ -90,12 +93,14 @@ set(igdemo_sources
   "igdemo/render/animated-pbr.cc"
   "igdemo/render/bg-skybox.cc"
   "igdemo/render/ctx-components.cc"
+  "igdemo/render/static-pbr.cc"
   "igdemo/render/wgpu-helpers.cc"
   "igdemo/systems/animation.cc"
   "igdemo/systems/attach-renderables.cc"
   "igdemo/systems/destroy-actor.cc"
   "igdemo/systems/enemy-locomotion.cc"
   "igdemo/systems/fly-camera.cc"
+  "igdemo/systems/hero-locomotion.cc"
   "igdemo/systems/locomotion.cc"
   "igdemo/systems/pbr-geo-pass.cc"
   "igdemo/systems/skybox.cc"
@@ -149,6 +154,7 @@ BUILD_IG_ASSET_PACK_PLAN(
     INFILES
       "shaders/aces_tonemapping.wgsl"
       "shaders/animated_pbr.wgsl"
+      "shaders/static_pbr.wgsl"
     TARGET_OUTPUT_FILES
       "resources/shaders.igpack")
 

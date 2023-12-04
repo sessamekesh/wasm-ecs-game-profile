@@ -6,26 +6,22 @@ namespace igdemo {
 CtxGeneral3dBuffers::CtxGeneral3dBuffers(const wgpu::Device& device,
                                          const wgpu::Queue& queue)
     : cameraBuffer(nullptr), lightingBuffer(nullptr) {
-  cameraBuffer = create_buffer(
-      device, queue, CtxAnimatedPbrPipeline::GPUCameraParams{},
-      wgpu::BufferUsage::Uniform, "common-3d-camera-params-buffer");
-  lightingBuffer = create_buffer(
-      device, queue, CtxAnimatedPbrPipeline::GPULightingParams{},
-      wgpu::BufferUsage::Uniform, "common-3d-lighting-params-buffer");
+  cameraBuffer = create_buffer(device, queue, pbr::GPUCameraParams{},
+                               wgpu::BufferUsage::Uniform,
+                               "common-3d-camera-params-buffer");
+  lightingBuffer = create_buffer(device, queue, pbr::GPULightingParams{},
+                                 wgpu::BufferUsage::Uniform,
+                                 "common-3d-lighting-params-buffer");
 }
 
 void CtxGeneral3dBuffers::update_camera(
-    const wgpu::Queue& queue,
-    const CtxAnimatedPbrPipeline::GPUCameraParams& params) {
-  queue.WriteBuffer(cameraBuffer, 0, &params,
-                    sizeof(CtxAnimatedPbrPipeline::GPUCameraParams));
+    const wgpu::Queue& queue, const pbr::GPUCameraParams& params) const {
+  queue.WriteBuffer(cameraBuffer, 0, &params, sizeof(pbr::GPUCameraParams));
 }
 
 void CtxGeneral3dBuffers::update_lighting(
-    const wgpu::Queue& queue,
-    const CtxAnimatedPbrPipeline::GPULightingParams& params) {
-  queue.WriteBuffer(lightingBuffer, 0, &params,
-                    sizeof(CtxAnimatedPbrPipeline::GPULightingParams));
+    const wgpu::Queue& queue, const pbr::GPULightingParams& params) const {
+  queue.WriteBuffer(lightingBuffer, 0, &params, sizeof(pbr::GPULightingParams));
 }
 
 CtxHdrPassOutput::CtxHdrPassOutput(const wgpu::Device& device, std::uint32_t w_,

@@ -3,6 +3,7 @@
 #include <igdemo/assets/core-shaders.h>
 #include <igdemo/render/animated-pbr.h>
 #include <igdemo/render/processing/equirect-to-cubemap.h>
+#include <igdemo/render/static-pbr.h>
 #include <igdemo/systems/pbr-geo-pass.h>
 #include <igdemo/systems/tonemap-pass.h>
 
@@ -45,6 +46,18 @@ LoadCoreShadersRslPromises load_core_shaders(
       main_thread_tasks);
   rsl.pbrShaderLoaded = pbr_animated_setup_promise;
 
+  auto pbr_static_setup_promise = decoder_promise->then(
+      [device, r](std::shared_ptr<igasset::IgpackDecoder> decoder) {
+        if (!decoder) {
+          return false;
+        }
+
+        auto wv = igecs::WorldView::Thin(r);
+        return PbrGeoPassSystem::setup_static(device, &wv, *decoder,
+                                              "pbrStaticWgsl");
+      },
+      main_thread_tasks);
+
   auto tonemap_system_setup_promise = decoder_promise->then(
       [device, queue, output_format,
        r](std::shared_ptr<igasset::IgpackDecoder> decoder) {
@@ -67,19 +80,27 @@ LoadCoreShadersRslPromises load_core_shaders(
 
   auto pbr_animated_setup_rsl_key =
       combiner->add(pbr_animated_setup_promise, main_thread_tasks);
+  auto pbr_static_setup_rsl_key =
+      combiner->add(pbr_static_setup_promise, main_thread_tasks);
   auto tonemap_setup_rsl_key =
       combiner->add_consuming(tonemap_system_setup_promise, main_thread_tasks);
 
   rsl.result = combiner->combine(
       [pbr_animated_setup_rsl_key, tonemap_setup_rsl_key,
+       pbr_static_setup_rsl_key,
        r](igasync::PromiseCombiner::Result rsl) -> std::vector<std::string> {
         std::vector<std::string> errors;
 
         bool pbr_animated_rsl = rsl.get(pbr_animated_setup_rsl_key);
+        bool pbr_static_rsl = rsl.get(pbr_static_setup_rsl_key);
         auto tonemap_setup_rsl = rsl.move(tonemap_setup_rsl_key);
 
         if (!pbr_animated_rsl) {
           errors.push_back("pbrAnimatedWgsl");
+        }
+
+        if (!pbr_static_rsl) {
+          errors.push_back("pbrStaticWgsl");
         }
 
         if (!tonemap_setup_rsl) {

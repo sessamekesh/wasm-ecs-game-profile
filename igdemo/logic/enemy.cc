@@ -1,6 +1,7 @@
 #include <igdemo/logic/combat.h>
 #include <igdemo/logic/enemy.h>
 #include <igdemo/logic/locomotion.h>
+#include <igdemo/logic/projectile.h>
 #include <igdemo/logic/renderable.h>
 
 namespace igdemo::enemy {
@@ -23,6 +24,13 @@ entt::entity create_enemy_entity(igecs::WorldView* wv,
   wv->attach<EnemyTag>(e);
   wv->attach<EnemyStrategyComponent>(
       e, EnemyStrategyComponent{enemyStrategy, rngSeed});
+  wv->attach<ProjectileFireCooldown>(
+      e, ProjectileFireCooldown{.maxAllowed = 12,
+                                .currentStored = 12,
+                                .mainCd = 0.125f,
+                                .secondaryCd = 0.025f,
+                                .mainCdRemaining = 0.f,
+                                .secondaryCdRemaining = 0.f});
 
   return e;
 }

@@ -7,8 +7,8 @@
 namespace igdemo {
 
 struct CtxSceneLightingParams {
-  CtxAnimatedPbrPipeline::GPULightingParams lightingParams;
-  CtxAnimatedPbrPipeline::GPUCameraParams cameraParams;
+  pbr::GPULightingParams lightingParams;
+  pbr::GPUCameraParams cameraParams;
 };
 
 class PbrUploadSceneBuffersSystem {
@@ -28,6 +28,9 @@ class PbrGeoPassSystem {
   static bool setup_animated(const wgpu::Device& device, igecs::WorldView* wv,
                              const igasset::IgpackDecoder& animated_pbr_decoder,
                              const std::string& animated_pbr_igasset_name);
+  static bool setup_static(const wgpu::Device& device, igecs::WorldView* wv,
+                           const igasset::IgpackDecoder& static_pbr_decoder,
+                           const std::string& static_pbr_igasset_name);
 
   static const igecs::WorldView::Decl& decl();
   static void run(igecs::WorldView* wv);

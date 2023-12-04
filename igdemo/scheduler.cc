@@ -5,6 +5,7 @@
 #include <igdemo/systems/destroy-actor.h>
 #include <igdemo/systems/enemy-locomotion.h>
 #include <igdemo/systems/fly-camera.h>
+#include <igdemo/systems/hero-locomotion.h>
 #include <igdemo/systems/locomotion.h>
 #include <igdemo/systems/pbr-geo-pass.h>
 #include <igdemo/systems/skybox.h>
@@ -25,10 +26,13 @@ igecs::Scheduler build_update_and_render_scheduler(
 
   // TODO (sessamekesh): System to update projectiles, spawn collision events
   // TODO (sessamekesh): System to handle projectile collision events
-  // TODO (sessamekesh): System to update heros based on strategy
   // TODO (sessamekesh): System to consume damage events, apply death
 
-  auto enemy_locomotion = builder.add_node().build<UpdateEnemiesSystem>();
+  auto hero_locomotion = builder.add_node().build<HeroLocomotionSystem>();
+
+  auto enemy_locomotion = builder.add_node()
+                              .depends_on(hero_locomotion)
+                              .build<UpdateEnemiesSystem>();
 
   auto locomotion =
       builder.add_node().depends_on(enemy_locomotion).build<LocomotionSystem>();

@@ -8,6 +8,10 @@ struct HealthComponent {
   float currentHealth;
 };
 
+struct LifetimeComponent {
+  float timeRemaining;
+};
+
 }  // namespace igdemo
 
 #endif
