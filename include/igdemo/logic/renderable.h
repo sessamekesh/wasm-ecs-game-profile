@@ -24,7 +24,6 @@ struct RenderableComponent {
   ModelType type;
   MaterialType material;
   AnimationType animation;
-  float scale;
 };
 
 }  // namespace igdemo

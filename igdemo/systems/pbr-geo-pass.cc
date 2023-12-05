@@ -72,7 +72,8 @@ const igecs::WorldView::Decl& PbrUploadPerInstanceBuffersSystem::decl() {
                                            // Iterators (external)
                                            .reads<SkinComponent>()
                                            .reads<WorldTransformComponent>()
-                                           .writes<AnimatedPbrSkinBindGroup>();
+                                           .writes<AnimatedPbrSkinBindGroup>()
+                                           .writes<StaticPbrModelBindGroup>();
 
   return decl;
 }
@@ -81,11 +82,21 @@ void PbrUploadPerInstanceBuffersSystem::run(igecs::WorldView* wv) {
   const auto& ctxDevice = wv->ctx<CtxWgpuDevice>();
   const auto& queue = ctxDevice.queue;
 
-  auto view = wv->view<const SkinComponent, const WorldTransformComponent,
-                       AnimatedPbrSkinBindGroup>();
+  {
+    auto view = wv->view<const SkinComponent, const WorldTransformComponent,
+                         AnimatedPbrSkinBindGroup>();
 
-  for (auto [e, skin, worldTransform, buffers] : view.each()) {
-    buffers.update(queue, skin.skin, worldTransform.worldTransform);
+    for (auto [e, skin, worldTransform, buffers] : view.each()) {
+      buffers.update(queue, skin.skin, worldTransform.worldTransform);
+    }
+  }
+
+  {
+    auto view =
+        wv->view<const WorldTransformComponent, StaticPbrModelBindGroup>();
+    for (auto [e, worldTransform, buffers] : view.each()) {
+      buffers.update(queue, worldTransform.worldTransform);
+    }
   }
 }
 

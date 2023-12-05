@@ -13,6 +13,10 @@ struct OrientationComponent {
   float radAngle;
 };
 
+struct ScaleComponent {
+  float scale;
+};
+
 }  // namespace igdemo
 
 #endif

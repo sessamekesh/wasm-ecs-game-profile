@@ -19,16 +19,17 @@ entt::entity create_enemy_entity(igecs::WorldView* wv,
   wv->attach<HealthComponent>(e, HealthComponent{100.f, 100.f});
 
   wv->attach<RenderableComponent>(
-      e, RenderableComponent{modelType, MaterialType::RED, AnimationType::IDLE,
-                             modelScale});
+      e,
+      RenderableComponent{modelType, MaterialType::RED, AnimationType::IDLE});
+  wv->attach<ScaleComponent>(e, modelScale);
   wv->attach<EnemyTag>(e);
   wv->attach<EnemyStrategyComponent>(
       e, EnemyStrategyComponent{enemyStrategy, rngSeed});
   wv->attach<ProjectileFireCooldown>(
       e, ProjectileFireCooldown{.maxAllowed = 12,
                                 .currentStored = 12,
-                                .mainCd = 0.125f,
-                                .secondaryCd = 0.025f,
+                                .mainCd = 2.5f,
+                                .secondaryCd = 0.85f,
                                 .mainCdRemaining = 0.f,
                                 .secondaryCdRemaining = 0.f});
 

@@ -1,5 +1,6 @@
 #include <igasync/promise_combiner.h>
 #include <igdemo/assets/core-shaders.h>
+#include <igdemo/assets/projectiles.h>
 #include <igdemo/assets/skybox.h>
 #include <igdemo/assets/ybot.h>
 #include <igdemo/igdemo-app.h>
@@ -179,6 +180,13 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
       main_thread_tasks->run(build_update_and_render_scheduler,
                              worker_thread_ids),
       main_thread_tasks);
+
+  auto projectiles_promise = load_projectile_resources(
+      proc_table, registry.get(), config.assetRootPath + "resources/",
+      app_base->Device, app_base->Queue, main_thread_tasks, async_tasks,
+      load_shaders_promises.pbrStaticShaderLoaded);
+  auto projectiles_errorskey =
+      combiner->add(projectiles_promise, main_thread_tasks);
 
   // Little hack to get registry from this scope into the return scope
   //  since igasync doesn't currently support mutable lambdas.

@@ -57,6 +57,7 @@ LoadCoreShadersRslPromises load_core_shaders(
                                               "pbrStaticWgsl");
       },
       main_thread_tasks);
+  rsl.pbrStaticShaderLoaded = pbr_static_setup_promise;
 
   auto tonemap_system_setup_promise = decoder_promise->then(
       [device, queue, output_format,

@@ -7,8 +7,10 @@
 #include <igdemo/systems/fly-camera.h>
 #include <igdemo/systems/hero-locomotion.h>
 #include <igdemo/systems/locomotion.h>
+#include <igdemo/systems/move-projectile.h>
 #include <igdemo/systems/pbr-geo-pass.h>
 #include <igdemo/systems/skybox.h>
+#include <igdemo/systems/spawn-projectiles.h>
 #include <igdemo/systems/tonemap-pass.h>
 #include <igdemo/systems/update-spatial-index.h>
 
@@ -24,8 +26,6 @@ igecs::Scheduler build_update_and_render_scheduler(
     builder.worker_thread_id(worker_thread_ids[i]);
   }
 
-  // TODO (sessamekesh): System to update projectiles, spawn collision events
-  // TODO (sessamekesh): System to handle projectile collision events
   // TODO (sessamekesh): System to consume damage events, apply death
 
   auto hero_locomotion = builder.add_node().build<HeroLocomotionSystem>();
@@ -34,8 +34,17 @@ igecs::Scheduler build_update_and_render_scheduler(
                               .depends_on(hero_locomotion)
                               .build<UpdateEnemiesSystem>();
 
-  auto locomotion =
-      builder.add_node().depends_on(enemy_locomotion).build<LocomotionSystem>();
+  auto spawn_projectiles = builder.add_node()
+                               .depends_on(enemy_locomotion)
+                               .build<SpawnProjectilesSystem>();
+
+  auto update_projectiles = builder.add_node()
+                                .depends_on(spawn_projectiles)
+                                .build<MoveProjectileSystem>();
+
+  auto locomotion = builder.add_node()
+                        .depends_on(update_projectiles)
+                        .build<LocomotionSystem>();
 
   auto update_spatial_index = builder.add_node()
                                   .depends_on(enemy_locomotion)

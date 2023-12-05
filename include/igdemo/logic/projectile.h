@@ -33,7 +33,6 @@ struct ProjectileFireCooldown {
 struct Projectile {
   ProjectileSource type;
   entt::entity source;
-  glm::vec2 pos;
   glm::vec2 velocity;
 };
 

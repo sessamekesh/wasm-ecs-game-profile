@@ -16,8 +16,9 @@ entt::entity create_hero_entity(igecs::WorldView* wv, HeroStrategy heroStrategy,
   wv->attach<OrientationComponent>(e, OrientationComponent{startOrientation});
   wv->attach<HealthComponent>(e, HealthComponent{2500.f, 2500.f});
   wv->attach<RenderableComponent>(
-      e, RenderableComponent{modelType, MaterialType::GREEN,
-                             AnimationType::IDLE, modelScale});
+      e,
+      RenderableComponent{modelType, MaterialType::GREEN, AnimationType::IDLE});
+  wv->attach<ScaleComponent>(e, ScaleComponent{modelScale});
   wv->attach<HeroTag>(e);
   wv->attach<HeroStrategyComponent>(
       e, HeroStrategyComponent{heroStrategy, rngSeed});
@@ -25,7 +26,7 @@ entt::entity create_hero_entity(igecs::WorldView* wv, HeroStrategy heroStrategy,
       e, ProjectileFireCooldown{.maxAllowed = 4,
                                 .currentStored = 4,
                                 .mainCd = 1.25f,
-                                .secondaryCd = 0.025f,
+                                .secondaryCd = 0.45f,
                                 .mainCdRemaining = 0.f,
                                 .secondaryCdRemaining = 0.f});
 

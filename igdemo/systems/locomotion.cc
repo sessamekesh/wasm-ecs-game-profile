@@ -12,7 +12,7 @@ const igecs::WorldView::Decl& LocomotionSystem::decl() {
   static igecs::WorldView::Decl decl = igecs::WorldView::Decl()
                                            .reads<PositionComponent>()
                                            .reads<OrientationComponent>()
-                                           .reads<RenderableComponent>()
+                                           .reads<ScaleComponent>()
                                            .writes<WorldTransformComponent>();
 
   return decl;
@@ -20,7 +20,7 @@ const igecs::WorldView::Decl& LocomotionSystem::decl() {
 
 void LocomotionSystem::run(igecs::WorldView* wv) {
   auto view = wv->view<const PositionComponent, const OrientationComponent,
-                       const RenderableComponent, WorldTransformComponent>();
+                       const ScaleComponent, WorldTransformComponent>();
 
   for (auto [e, p, o, r, wt] : view.each()) {
     glm::mat4 matScl = glm::scale(glm::vec3(r.scale));

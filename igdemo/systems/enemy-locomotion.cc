@@ -14,7 +14,6 @@ namespace {
 
 const float kEnemyProvokedMovementSpeed = 7.4f;
 const float kProvokedProjectileCd = 0.35f;
-const float kProvokedProjectileSpeed = 0.15f;
 
 const float kChucklefuckWanderSpeed = 1.5f;
 

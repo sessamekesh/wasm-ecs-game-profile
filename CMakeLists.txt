@@ -31,6 +31,7 @@ include(cmake/gen_igpack.cmake)
 #
 set(igdemo_includes
   "include/igdemo/assets/core-shaders.h"
+  "include/igdemo/assets/projectiles.h"
   "include/igdemo/assets/skybox.h"
   "include/igdemo/assets/ybot.h"
   "include/igdemo/logic/combat.h"
@@ -47,6 +48,7 @@ set(igdemo_includes
   "include/igdemo/platform/keyboard-mouse-input-emitter.h"
   "include/igdemo/render/geo/cube.h"
   "include/igdemo/render/geo/fullscreen_quad.h"
+  "include/igdemo/render/geo/sphere.h"
   "include/igdemo/render/processing/brdflut.h"
   "include/igdemo/render/processing/equirect-to-cubemap.h"
   "include/igdemo/render/processing/gen-mips.h"
@@ -68,8 +70,10 @@ set(igdemo_includes
   "include/igdemo/systems/fly-camera.h"
   "include/igdemo/systems/hero-locomotion.h"
   "include/igdemo/systems/locomotion.h"
+  "include/igdemo/systems/move-projectile.h"
   "include/igdemo/systems/pbr-geo-pass.h"
   "include/igdemo/systems/skybox.h"
+  "include/igdemo/systems/spawn-projectiles.h"
   "include/igdemo/systems/tonemap-pass.h"
   "include/igdemo/systems/update-spatial-index.h"
   "include/igdemo/igdemo-app.h"
@@ -77,6 +81,7 @@ set(igdemo_includes
 
 set(igdemo_sources
   "igdemo/assets/core-shaders.cc"
+  "igdemo/assets/projectiles.cc"
   "igdemo/assets/skybox.cc"
   "igdemo/assets/ybot.cc"
   "igdemo/logic/enemy.cc"
@@ -85,6 +90,7 @@ set(igdemo_sources
   "igdemo/platform/keyboard-mouse-input-emitter.cc"
   "igdemo/render/geo/cube.cc"
   "igdemo/render/geo/fullscreen_quad.cc"
+  "igdemo/render/geo/sphere.cc"
   "igdemo/render/processing/brdflut.cc"
   "igdemo/render/processing/equirect-to-cubemap.cc"
   "igdemo/render/processing/gen-mips.cc"
@@ -102,8 +108,10 @@ set(igdemo_sources
   "igdemo/systems/fly-camera.cc"
   "igdemo/systems/hero-locomotion.cc"
   "igdemo/systems/locomotion.cc"
+  "igdemo/systems/move-projectile.cc"
   "igdemo/systems/pbr-geo-pass.cc"
   "igdemo/systems/skybox.cc"
+  "igdemo/systems/spawn-projectiles.cc"
   "igdemo/systems/tonemap-pass.cc"
   "igdemo/systems/update-spatial-index.cc"
   "igdemo/igdemo-app.cc"

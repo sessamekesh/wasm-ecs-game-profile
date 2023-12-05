@@ -14,6 +14,7 @@ namespace igdemo {
 struct LoadCoreShadersRslPromises {
   std::shared_ptr<igasync::Promise<std::vector<std::string>>> result;
   std::shared_ptr<igasync::Promise<bool>> pbrShaderLoaded;
+  std::shared_ptr<igasync::Promise<bool>> pbrStaticShaderLoaded;
 };
 
 LoadCoreShadersRslPromises load_core_shaders(
