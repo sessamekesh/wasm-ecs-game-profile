@@ -7,6 +7,7 @@ namespace igdemo {
 
 const igecs::WorldView::Decl& DestroyActorSystem::decl() {
   static igecs::WorldView::Decl d = igecs::WorldView::Decl()
+                                        .merge_in_decl(GridIndex::mut_decl())
                                         .evt_consumes<EvtDestroyActor>()
                                         .ctx_writes<CtxSpatialIndex>()
                                         .reads<HeroTag>()

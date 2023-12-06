@@ -88,9 +88,11 @@ set(igdemo_includes
   "include/igdemo/systems/locomotion.h"
   "include/igdemo/systems/move-projectile.h"
   "include/igdemo/systems/pbr-geo-pass.h"
+  "include/igdemo/systems/projectile-hit.h"
   "include/igdemo/systems/skybox.h"
   "include/igdemo/systems/spawn-projectiles.h"
   "include/igdemo/systems/tonemap-pass.h"
+  "include/igdemo/systems/update-health.h"
   "include/igdemo/systems/update-spatial-index.h"
   "include/igdemo/igdemo-app.h"
   "include/igdemo/scheduler.h")
@@ -126,9 +128,11 @@ set(igdemo_sources
   "igdemo/systems/locomotion.cc"
   "igdemo/systems/move-projectile.cc"
   "igdemo/systems/pbr-geo-pass.cc"
+  "igdemo/systems/projectile-hit.cc"
   "igdemo/systems/skybox.cc"
   "igdemo/systems/spawn-projectiles.cc"
   "igdemo/systems/tonemap-pass.cc"
+  "igdemo/systems/update-health.cc"
   "igdemo/systems/update-spatial-index.cc"
   "igdemo/igdemo-app.cc"
   "igdemo/scheduler.cc")

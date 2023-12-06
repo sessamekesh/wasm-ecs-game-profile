@@ -14,7 +14,7 @@ entt::entity create_hero_entity(igecs::WorldView* wv, HeroStrategy heroStrategy,
 
   wv->attach<PositionComponent>(e, PositionComponent{startPos});
   wv->attach<OrientationComponent>(e, OrientationComponent{startOrientation});
-  wv->attach<HealthComponent>(e, HealthComponent{2500.f, 2500.f});
+  wv->attach<HealthComponent>(e, HealthComponent{500.f, 500.f});
   wv->attach<RenderableComponent>(
       e,
       RenderableComponent{modelType, MaterialType::GREEN, AnimationType::IDLE});

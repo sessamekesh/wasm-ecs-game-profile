@@ -17,7 +17,7 @@ struct SprayNPrayTarget {
   std::uint32_t rngOffset;
 };
 
-const float kKiteAwaySpeed = 4.5f;
+const float kKiteAwaySpeed = 20.f;
 
 const float kSpraySwitchTime = 3.f;
 
@@ -72,6 +72,22 @@ static void kite(igecs::WorldView* wv, entt::entity e, float dt,
 
   orientation.radAngle = glm::atan(to_enemy_dir.x, to_enemy_dir.y);
   pos.map_position += -to_enemy_dir * dt * kKiteAwaySpeed;
+
+  // Bounds!
+  const auto& bounds = wv->ctx<CtxLevelMetadata>();
+  if (pos.map_position.x < bounds.mapXMin) {
+    pos.map_position.x = bounds.mapXMin;
+  }
+  if (pos.map_position.y < bounds.mapZMin) {
+    pos.map_position.y = bounds.mapZMin;
+  }
+  if (pos.map_position.x > (bounds.mapXMin + bounds.mapXRange)) {
+    pos.map_position.x = bounds.mapXMin + bounds.mapXRange;
+  }
+  if (pos.map_position.y > (bounds.mapZMin + bounds.mapZRange)) {
+    pos.map_position.y = bounds.mapZMin + bounds.mapZRange;
+  }
+
   maybe_set_animation_state(
       wv, e, AnimationType::RUN);  // TODO (sessamekesh): Play it backwards!
 
@@ -84,12 +100,14 @@ static void spray_n_pray(igecs::WorldView* wv, entt::entity e, float dt,
                          const CtxSpatialIndex& spatial_index,
                          PositionComponent& pos,
                          OrientationComponent& orientation) {
-  auto& target = wv->attach_or_replace<SprayNPrayTarget>(
-      e, SprayNPrayTarget{
-             .currentTarget = {0.f, 0.f},
-             .timeToSwitch = 0.f,
-             .rngOffset = rngBase + 368u,
-         });
+  if (!wv->has<SprayNPrayTarget>(e)) {
+    wv->attach<SprayNPrayTarget>(e, SprayNPrayTarget{
+                                        .currentTarget = {0.f, 0.f},
+                                        .timeToSwitch = 0.f,
+                                        .rngOffset = rngBase + 368u,
+                                    });
+  }
+  auto& target = wv->write<SprayNPrayTarget>(e);
 
   target.timeToSwitch -= dt;
   if (target.timeToSwitch <= 0.f) {

@@ -9,9 +9,11 @@
 #include <igdemo/systems/locomotion.h>
 #include <igdemo/systems/move-projectile.h>
 #include <igdemo/systems/pbr-geo-pass.h>
+#include <igdemo/systems/projectile-hit.h>
 #include <igdemo/systems/skybox.h>
 #include <igdemo/systems/spawn-projectiles.h>
 #include <igdemo/systems/tonemap-pass.h>
+#include <igdemo/systems/update-health.h>
 #include <igdemo/systems/update-spatial-index.h>
 
 namespace igdemo {
@@ -25,8 +27,6 @@ igecs::Scheduler build_update_and_render_scheduler(
   for (int i = 0; i < worker_thread_ids.size(); i++) {
     builder.worker_thread_id(worker_thread_ids[i]);
   }
-
-  // TODO (sessamekesh): System to consume damage events, apply death
 
   auto hero_locomotion = builder.add_node().build<HeroLocomotionSystem>();
 
@@ -52,9 +52,19 @@ igecs::Scheduler build_update_and_render_scheduler(
                                   .main_thread_only()
                                   .build<UpdateSpatialIndexSystem>();
 
+  auto apply_projectile_damage = builder.add_node()
+                                     .depends_on(update_spatial_index)
+                                     .build<ProjectileHitSystem>();
+
+  auto update_health = builder.add_node()
+                           .depends_on(apply_projectile_damage)
+                           .build<UpdateHealthSystem>();
+
   // Run at the end of the logic pass (but before rendering pass begins)
   auto destroy_actors = builder.add_node()
                             .main_thread_only()
+                            .depends_on(update_health)
+                            .depends_on(apply_projectile_damage)
                             .depends_on(update_spatial_index)
                             .build<DestroyActorSystem>();
 
