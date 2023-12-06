@@ -47,6 +47,7 @@ igecs::Scheduler build_update_and_render_scheduler(
                         .build<LocomotionSystem>();
 
   auto update_spatial_index = builder.add_node()
+                                  .depends_on(update_projectiles)
                                   .depends_on(enemy_locomotion)
                                   .main_thread_only()
                                   .build<UpdateSpatialIndexSystem>();

@@ -13,7 +13,12 @@
       "variables": [
         {
           "name": "IG_ENABLE_ECS_VALIDATION",
-          "value": "False",
+          "value": "True",
+          "type": "BOOL"
+        },
+        {
+          "name": "IG_BUILD_TESTS",
+          "value": "True",
           "type": "BOOL"
         }
       ]

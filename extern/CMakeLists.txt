@@ -74,7 +74,7 @@ endif ()
 FetchContent_Declare(
     entt
     GIT_REPOSITORY "https://github.com/skypjack/entt"
-    GIT_TAG "62a13526c989f14eff348c28c061542ac7a16d45"
+    GIT_TAG "344e03ac64a1f78424ab1150e2d4778e8df8431d"
 )
 FetchContent_MakeAvailable(entt)
 

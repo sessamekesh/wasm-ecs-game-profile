@@ -17,6 +17,7 @@ const igecs::WorldView::Decl& SpawnProjectilesSystem::decl() {
                                            .reads<ProjectileFiringIntent>()
                                            .reads<HeroTag>()
                                            .reads<enemy::EnemyTag>()
+                                           .writes<PositionComponent>()
                                            .writes<ProjectileFireCooldown>()
                                            .writes<Projectile>()
                                            .writes<LifetimeComponent>();

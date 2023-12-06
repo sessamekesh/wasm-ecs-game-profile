@@ -10,6 +10,7 @@ set(IG_TOOLS_BUILD "ON" CACHE BOOL "Build tools if this option is set to true")
 set(IG_ENABLE_ECS_VALIDATION "ON" CACHE BOOL "Include asserts that validate ECS concurrency safety (useful in debugging, but creates loud errors)")
 set(IG_ENABLE_WASM_THREADS "ON" CACHE BOOL "Build targets with threading support")
 set(IG_USE_PREBUILT_ASSETS "ON" CACHE BOOL "Use pre-generated asset packs - useful since not all targets can be built from distributed source")
+set(IG_BUILD_TESTS "OFF" CACHE BOOL "Use pre-generated asset packs - useful since not all targets can be built from distributed source")
 
 include(cmake/import_build_tools.cmake)
 include(cmake/gen_flatbuffer_cpp.cmake)
@@ -21,6 +22,21 @@ add_subdirectory(lib)
 if (IG_TOOLS_BUILD AND NOT EMSCRIPTEN)
   message(STATUS "Tooling added for this project - don't forget to export them if you're doing a web build")
   add_subdirectory(tools)
+endif ()
+
+if (IG_BUILD_TESTS)
+  FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY "https://github.com/google/googletest"
+    GIT_TAG "6b74da4757a549563d7c37c8fae3e704662a043b"
+  )
+
+  # For Windows: Prevent overriding the parent project's compiler/linker settings
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  FetchContent_MakeAvailable(googletest)
+
+  enable_testing()
+  include(GoogleTest)
 endif ()
 
 include(cmake/export_build_tools.cmake)
@@ -120,19 +136,24 @@ set(igdemo_sources
 if (EMSCRIPTEN)
   set(igdemo_platform_sources
     "include/igdemo/platform/web/raii-fetch.h"
-    "igdemo/platform/web/raii-fetch.cc"
-    "igdemo/wasm-bindings.cc")
+    "igdemo/platform/web/raii-fetch.cc")
+  set(igdemo_main "igdemo/wasm-bindings.cc")
 else ()
-  set(igdemo_platform_sources
-    "igdemo/native-main.cc")
+  set(igdemo_platform_sources)
+  set(igdemo_main "igdemo/native-main.cc")
 endif ()
 
-add_executable(igdemo ${igdemo_includes} ${igdemo_sources} ${igdemo_platform_sources})
-target_include_directories(igdemo PRIVATE "include")
-target_link_libraries(igdemo PUBLIC iggpu igasync igecs igasset)
+add_library(igdemo_lib ${igdemo_includes} ${igdemo_sources} ${igdemo_platform_sources})
+target_include_directories(igdemo_lib PUBLIC "include")
+target_link_libraries(igdemo_lib PUBLIC iggpu igasync igecs igasset)
+set_property(TARGET igdemo_lib PROPERTY CXX_STANDARD 20)
+
+add_executable(igdemo ${igdemo_main})
+target_link_libraries(igdemo PRIVATE igdemo_lib)
 set_property(TARGET igdemo PROPERTY CXX_STANDARD 20)
 
 if (EMSCRIPTEN)
+  set_wasm_target_properties(TARGET_NAME igdemo_lib)
   set_wasm_target_properties(TARGET_NAME igdemo EXPORT_NAME IgDemoModule)
 
   configure_file(webview/index.html ${CMAKE_BINARY_DIR}/index.html COPYONLY)
@@ -183,3 +204,16 @@ BUILD_IG_ASSET_PACK_PLAN(
 
 add_dependencies(igdemo
   igp-ybot igp-shaders igp-skybox)
+
+
+if (IG_BUILD_TESTS)
+  set(igdemo_test_sources
+    "test/entt-usage-test.cc")
+  add_executable(igdemo_tests ${igdemo_test_sources})
+  target_link_libraries(igdemo_tests PUBLIC igdemo_lib gtest gtest_main)
+  set_property(TARGET igdemo_tests PROPERTY CXX_STANDARD 20)
+
+  if (NOT EMSCRIPTEN)
+    gtest_discover_tests(igdemo_tests)
+  endif ()
+endif ()

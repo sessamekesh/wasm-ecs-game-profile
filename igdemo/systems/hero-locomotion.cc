@@ -23,6 +23,7 @@ const float kSpraySwitchTime = 3.f;
 
 const igecs::WorldView::Decl& HeroLocomotionSystem::decl() {
   static igecs::WorldView::Decl d = igecs::WorldView::Decl()
+                                        .merge_in_decl(GridIndex::decl())
                                         .ctx_reads<CtxSpatialIndex>()
                                         .ctx_reads<CtxFrameTime>()
                                         .ctx_reads<CtxLevelMetadata>()

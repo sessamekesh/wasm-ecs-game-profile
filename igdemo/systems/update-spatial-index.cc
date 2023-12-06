@@ -18,13 +18,12 @@ void UpdateSpatialIndexSystem::init(igecs::WorldView* wv, float xMin,
 }
 
 const igecs::WorldView::Decl& UpdateSpatialIndexSystem::decl() {
-  static igecs::WorldView::Decl decl =
-      igecs::WorldView::Decl()
-          .ctx_writes<CtxSpatialIndex>()
-          .reads<HeroTag>()
-          .reads<enemy::EnemyTag>()
-          .reads<PositionComponent>()
-          .merge_in_decl(GridIndex::mut_decl());
+  static igecs::WorldView::Decl decl = igecs::WorldView::Decl()
+                                           .merge_in_decl(GridIndex::mut_decl())
+                                           .ctx_writes<CtxSpatialIndex>()
+                                           .reads<HeroTag>()
+                                           .reads<enemy::EnemyTag>()
+                                           .reads<PositionComponent>();
 
   return decl;
 }

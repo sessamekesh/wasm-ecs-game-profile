@@ -62,9 +62,21 @@ std::shared_ptr<igasync::Promise<void>> MoveProjectileSystem::run(
 
   // Pass 1 - collect entities that need iteration
   {
+    std::set<entt::entity> eset;
+
     auto view =
         wv->view<PositionComponent, LifetimeComponent, const Projectile>();
     for (auto [e, pos, life, proj] : view.each()) {
+      if (eset.count(e) > 0) {
+        // Error condition?
+        auto view2 =
+            wv->view<PositionComponent, LifetimeComponent, const Projectile>();
+        eset.clear();
+        for (auto [e2, pos2, life2, proj2] : view2.each()) {
+          eset.insert(e2);
+        }
+      }
+      eset.insert(e);
       if (wv->valid(e)) {
         process_list->push_back(e);
       } else {
@@ -85,12 +97,17 @@ std::shared_ptr<igasync::Promise<void>> MoveProjectileSystem::run(
                  static_cast<std::uint32_t>(process_list->size()) - startChunk);
 
     auto promise = igasync::Promise<void>::Create();
-    any_thread->schedule(igasync::Task::WithProfile(
+    main_thread->schedule(igasync::Task::WithProfile(
         profile_cb, update, wv, process_list, startChunk, ct, dt, promise));
 
-    combiner->add(promise, any_thread);
+    combiner->add(promise, main_thread);
   }
 
-  return combiner->combine([](auto) {}, any_thread);
+  return combiner->combine(
+      [](auto) {
+        // Finished
+        int a = 1 + 2;
+      },
+      main_thread);
 }
 }  // namespace igdemo

@@ -93,6 +93,7 @@ igecs::WorldView::Decl ProjectileRenderUtil::decl() {
       .ctx_reads<CtxWgpuDevice>()
       .ctx_reads<CtxStaticPbrPipeline>()
       .reads<Projectile>()
+      .writes<ScaleComponent>()
       .writes<WorldTransformComponent>()
       .writes<StaticPbrInstance>()
       .writes<OrientationComponent>()
