@@ -20,11 +20,14 @@ std::vector<igasset::PosNormalVertexData3D> SphereGenerator::get_vertices()
       float ySegment = static_cast<float>(y) / static_cast<float>(ySegments);
 
       igasset::PosNormalVertexData3D vert{};
-      vert.Position.x = glm::cos(xSegment * glm::two_pi<float>()) *
-                        glm::sin(ySegment * glm::pi<float>());
-      vert.Position.y = glm::cos(ySegment * glm::pi<float>());
-      vert.Position.z = glm::sin(xSegment * glm::two_pi<float>()) *
-                        glm::sin(ySegment * glm::pi<float>());
+      vert.Position.x = (glm::cos(xSegment * glm::two_pi<float>()) *
+                         glm::sin(ySegment * glm::pi<float>())) *
+                        radius;
+      vert.Position.y =
+          glm::cos(ySegment * glm::pi<float>()) * radius + yOffset;
+      vert.Position.z = (glm::sin(xSegment * glm::two_pi<float>()) *
+                         glm::sin(ySegment * glm::pi<float>())) *
+                        radius;
 
       vert.Normal = vert.Position;
       verts.push_back(vert);

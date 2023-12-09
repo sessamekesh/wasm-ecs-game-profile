@@ -21,7 +21,7 @@ function (set_wasm_target_properties)
 
   target_link_options(
     ${AWT_TARGET_NAME} PRIVATE
-      "SHELL:--bind -s NO_DYNAMIC_EXECUTION=1 -s WASM=1 -s MODULARIZE=1 -s ENVIRONMENT=web,worker -s WASM_BIGINT=1 -s USE_GLFW=3 -s FETCH=1 -s INITIAL_MEMORY=268435456 -s EXIT_RUNTIME=0 -s MALLOC=emmalloc -s FILESYSTEM=0 -s USE_WEBGPU=1 -lwebsocket.js")
+      "SHELL:--bind -s NO_DYNAMIC_EXECUTION=1 -s WASM=1 -s MODULARIZE=1 -s ENVIRONMENT=web,worker -s WASM_BIGINT=1 -s USE_GLFW=3 -s FETCH=1 -s INITIAL_MEMORY=268435456 -sALLOW_MEMORY_GROWTH -s EXIT_RUNTIME=0 -s MALLOC=emmalloc -s FILESYSTEM=0 -s USE_WEBGPU=1 -lwebsocket.js")
 
   if (NOT ${AWT_EXPORT_NAME} STREQUAL "")
     target_link_options(

@@ -11,6 +11,7 @@ using FpSeconds = std::chrono::duration<float, std::chrono::seconds::period>;
 
 int main(int argc, char** argv) {
   bool singlethreaded;
+  int thread_count;
   std::uint32_t rng_seed;
   std::uint32_t num_enemy_mobs;
   std::uint32_t num_heroes;
@@ -29,6 +30,10 @@ int main(int argc, char** argv) {
     cli.add_option("--singlethreaded", singlethreaded,
                    "Run this app in single-threaded mode")
         ->default_val(false);
+    cli.add_option(
+           "--threadcount", thread_count,
+           "Number of threads to use (or 0 to use hardware_concurrency)")
+        ->default_val(0);
     cli.add_option("--seed", rng_seed,
                    "Seed value for random number generation")
         ->default_val(std::chrono::high_resolution_clock::now()
@@ -73,6 +78,7 @@ int main(int argc, char** argv) {
 
   igdemo::IgdemoConfig config{};
   config.multithreaded = !singlethreaded;
+  config.threadCountOverride = thread_count;
   config.numEnemyMobs = num_enemy_mobs;
   config.numHeroes = num_heroes;
   config.numWarmupFrames = warmup_frame_count;
@@ -138,7 +144,12 @@ int main(int argc, char** argv) {
   igasync::ThreadPool::Desc thread_pool_desc{};
   if (config.multithreaded) {
     thread_pool_desc.UseHardwareConcurrency = true;
-    thread_pool_desc.AdditionalThreads = -1;  // To account for main thread
+    if (config.threadCountOverride > 0) {
+      thread_pool_desc.AdditionalThreads =
+          config.threadCountOverride - std::thread::hardware_concurrency() - 1;
+    } else {
+      thread_pool_desc.AdditionalThreads = -1;  // To account for main thread
+    }
   } else {
     thread_pool_desc.UseHardwareConcurrency = false;
     thread_pool_desc.AdditionalThreads = 0;

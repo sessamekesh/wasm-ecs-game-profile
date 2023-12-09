@@ -17,7 +17,7 @@ load_projectile_resources(
     std::shared_ptr<igasync::ExecutionContext> main_thread_tasks,
     std::shared_ptr<igasync::ExecutionContext> compute_tasks,
     std::shared_ptr<igasync::Promise<bool>> shaderLoadedPromise) {
-  SphereGenerator projectile_sphere_gen{20, 12};
+  SphereGenerator projectile_sphere_gen{20, 12, /*y=*/1.5f, /*radius=*/0.75f};
 
   auto sphere_vertices_promise = igasync::Promise<void>::Immediate()->then(
       [projectile_sphere_gen]() {

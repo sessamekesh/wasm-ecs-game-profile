@@ -1,4 +1,5 @@
 #include <igasync/promise_combiner.h>
+#include <igdemo/assets/arena.h>
 #include <igdemo/assets/core-shaders.h>
 #include <igdemo/assets/projectiles.h>
 #include <igdemo/assets/skybox.h>
@@ -16,6 +17,7 @@
 #include <igdemo/systems/pbr-geo-pass.h>
 #include <igdemo/systems/update-spatial-index.h>
 
+#include <glm/gtc/constants.hpp>
 #include <random>
 
 namespace {
@@ -29,11 +31,11 @@ void create_main_camera(igecs::WorldView* wv) {
   auto e = wv->create();
   wv->attach<igdemo::CameraComponent>(
       e, igdemo::CameraComponent{/* position */
-                                 glm::vec3(0.f, 4.5f, -150.f),
+                                 glm::vec3(0.f, 4.5f, zMin),
                                  /* theta */
                                  0.f,
                                  /* phi */
-                                 0.f,
+                                 glm::pi<float>() * -0.11f,
                                  /* fovy */
                                  glm::radians(85.f),
                                  /* nearPlane + farPlane */
@@ -78,7 +80,6 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
       std::make_unique<KeyboardMouseInputEmitter>(app_base->Window)});
 
   // Setup logical level state...
-  // TODO (sessamekesh): Generate from config
   {
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -158,10 +159,18 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
       },
       main_thread_tasks);
 
+  auto load_arena_promise = load_arena_resources(
+      proc_table, registry.get(), config.assetRootPath + "resources/",
+      app_base->Device, app_base->Queue,
+      load_shaders_promises.pbrStaticShaderLoaded, main_thread_tasks,
+      async_tasks);
+
   auto ybot_load_errors_key =
       combiner->add(load_character_promise, main_thread_tasks);
   auto shaders_load_errorskey =
       combiner->add(shaders_promise, main_thread_tasks);
+  auto arena_load_errorskey =
+      combiner->add(load_arena_promise, main_thread_tasks);
 
   auto load_skybox_promise = load_skybox(
       proc_table, registry.get(), config.assetRootPath + "resources/",
@@ -198,15 +207,16 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
   return combiner->combine(
       [config, proc_table, reg_promise_key, ybot_load_errors_key,
        shaders_load_errorskey, skybox_load_errorskey, frame_execution_graph_key,
-       app_base, main_thread_tasks,
+       arena_load_errorskey, app_base, main_thread_tasks,
        async_tasks](igasync::PromiseCombiner::Result rsl)
           -> std::variant<std::unique_ptr<IgdemoApp>, IgdemoLoadError> {
         const auto& ybot_load_errors = rsl.get(ybot_load_errors_key);
         const auto& shader_load_errors = rsl.get(shaders_load_errorskey);
         const auto& skybox_load_errors = rsl.get(skybox_load_errorskey);
+        const auto& arena_load_errors = rsl.get(arena_load_errorskey);
 
         if (ybot_load_errors.size() > 0 || shader_load_errors.size() > 0 ||
-            skybox_load_errors.size() > 0) {
+            skybox_load_errors.size() > 0 || arena_load_errors.size() > 0) {
           std::cerr << "Error loading scene!" << std::endl;
           for (const auto& ybot_err : ybot_load_errors) {
             std::cerr << "-- YBot: " << ybot_err << std::endl;
@@ -216,6 +226,9 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
           }
           for (const auto& ybot_err : skybox_load_errors) {
             std::cerr << "-- Skybox: " << ybot_err << std::endl;
+          }
+          for (const auto& arena_err : arena_load_errors) {
+            std::cerr << "-- Arena: " << arena_err << std::endl;
           }
           proc_table.indicateProgress(LoadingProgressMark::AppLoadFailed);
           return nullptr;

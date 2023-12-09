@@ -1,5 +1,5 @@
-#ifndef IGDEMO_RENDER_GEO_SPHERE_H
-#define IGDEMO_RENDER_GEO_SPHERE_H
+#ifndef IGDEMO_RENDER_GEO_QUAD_H
+#define IGDEMO_RENDER_GEO_QUAD_H
 
 #include <igasset/vertex_types.h>
 
@@ -7,11 +7,9 @@
 
 namespace igdemo {
 
-struct SphereGenerator {
-  std::uint16_t xSegments;
-  std::uint16_t ySegments;
-  float yOffset;
-  float radius;
+struct Quad {
+  float width;
+  float depth;
 
   std::vector<igasset::PosNormalVertexData3D> get_vertices() const;
   std::vector<std::uint16_t> get_indices() const;

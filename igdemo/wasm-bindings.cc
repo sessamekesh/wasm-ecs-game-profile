@@ -27,6 +27,12 @@ igdemo::IgdemoProcTable create_proc_table(
   return proc_table;
 }
 
+void cleanup_app_base() {
+  if (gAppBase) {
+    gAppBase = nullptr;
+  }
+}
+
 void create_new_app(std::string canvas_name,
                     std::shared_ptr<igasync::TaskList> main_thread_task_list,
                     igdemo::IgdemoConfig config,
@@ -114,6 +120,7 @@ EMSCRIPTEN_BINDINGS(IgDemoModule) {
       .field("profileFrameGapSize", &igdemo::IgdemoConfig::profileFrameGapSize)
       .field("renderOutput", &igdemo::IgdemoConfig::renderOutput)
       .field("multithreaded", &igdemo::IgdemoConfig::multithreaded)
+      .field("threadCountOverride", &igdemo::IgdemoConfig::threadCountOverride)
       .field("assetRootPath", &igdemo::IgdemoConfig::assetRootPath);
 
   class_<igdemo::IgdemoApp>("IgdemoApp")
@@ -140,4 +147,5 @@ EMSCRIPTEN_BINDINGS(IgDemoModule) {
 
   function("create_proc_table", &create_proc_table);
   function("create_new_app", &create_new_app);
+  function("cleanup_app_base", &cleanup_app_base);
 }

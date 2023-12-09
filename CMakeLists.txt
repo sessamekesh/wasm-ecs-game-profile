@@ -46,6 +46,7 @@ include(cmake/gen_igpack.cmake)
 # Project itself
 #
 set(igdemo_includes
+  "include/igdemo/assets/arena.h"
   "include/igdemo/assets/core-shaders.h"
   "include/igdemo/assets/projectiles.h"
   "include/igdemo/assets/skybox.h"
@@ -64,6 +65,7 @@ set(igdemo_includes
   "include/igdemo/platform/keyboard-mouse-input-emitter.h"
   "include/igdemo/render/geo/cube.h"
   "include/igdemo/render/geo/fullscreen_quad.h"
+  "include/igdemo/render/geo/quad.h"
   "include/igdemo/render/geo/sphere.h"
   "include/igdemo/render/processing/brdflut.h"
   "include/igdemo/render/processing/equirect-to-cubemap.h"
@@ -98,6 +100,7 @@ set(igdemo_includes
   "include/igdemo/scheduler.h")
 
 set(igdemo_sources
+  "igdemo/assets/arena.cc"
   "igdemo/assets/core-shaders.cc"
   "igdemo/assets/projectiles.cc"
   "igdemo/assets/skybox.cc"
@@ -108,6 +111,7 @@ set(igdemo_sources
   "igdemo/platform/keyboard-mouse-input-emitter.cc"
   "igdemo/render/geo/cube.cc"
   "igdemo/render/geo/fullscreen_quad.cc"
+  "igdemo/render/geo/quad.cc"
   "igdemo/render/geo/sphere.cc"
   "igdemo/render/processing/brdflut.cc"
   "igdemo/render/processing/equirect-to-cubemap.cc"

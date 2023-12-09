@@ -50,8 +50,13 @@ struct IgdemoConfig {
   bool multithreaded;
 
   /**
+   * @brief If positive, number of worker threads to spawn  (if multithreaded)
+   */
+  int threadCountOverride;
+
+  /**
    * @brief Base path to read resources from
-  */
+   */
   std::string assetRootPath;
 };
 
