@@ -68,7 +68,8 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  auto app_base_rsl = iggpu::AppBase::Create(1800, 1080, "IgDemo");
+  auto app_base_rsl = iggpu::AppBase::Create(
+      1800, 1080, wgpu::TextureFormat::BGRA8Unorm, "IgDemo");
   if (std::holds_alternative<iggpu::AppBaseCreateError>(app_base_rsl)) {
     std::cerr << "Failed to initialize IgDemo app base" << std::endl;
     return -1;
@@ -209,7 +210,7 @@ int main(int argc, char** argv) {
     app_base->process_events();
 
     if (demo_app) {
-      app_base->SwapChain.Present();
+      app_base->Surface.Present();
     } else {
       while (main_thread_tasks->execute_next()) {
       }

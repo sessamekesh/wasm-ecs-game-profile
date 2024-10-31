@@ -59,8 +59,7 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
   // Synchronous context setup for systems globals...
   auto wv = igecs::WorldView::Thin(registry.get());
   wv.attach_ctx<CtxWgpuDevice>(app_base->Device, app_base->Queue,
-                               app_base->preferred_swap_chain_texture_format(),
-                               nullptr);
+                               app_base->SurfaceFormat, nullptr);
   wv.attach_ctx<CtxGeneral3dBuffers>(app_base->Device, app_base->Queue);
   init_animation_systems(&wv);
   wv.attach_ctx<CtxFrameTime>();
@@ -139,9 +138,8 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
 
   auto load_shaders_promises = load_core_shaders(
       proc_table, registry.get(), config.assetRootPath + "resources/",
-      app_base->Device, app_base->Queue,
-      app_base->preferred_swap_chain_texture_format(), main_thread_tasks,
-      async_tasks);
+      app_base->Device, app_base->Queue, app_base->SurfaceFormat,
+      main_thread_tasks, async_tasks);
   auto& shaders_promise = load_shaders_promises.result;
   shaders_promise->on_resolve(
       [proc_table](const auto&) {
@@ -251,11 +249,13 @@ IgdemoApp::Create(iggpu::AppBase* app_base, IgdemoConfig config,
 void IgdemoApp::update_and_render(float dt) {
   const auto& device = app_base_->Device;
   const auto& queue = app_base_->Queue;
-  const auto& swap_chain = app_base_->SwapChain;
 
   // Prepare frame globals...
   auto wv = igecs::WorldView::Thin(r_.get());
-  wv.mut_ctx<CtxWgpuDevice>().renderTarget = swap_chain.GetCurrentTextureView();
+  wgpu::SurfaceTexture surfaceTexture = {};
+  app_base_->Surface.GetCurrentTexture(&surfaceTexture);
+  wv.mut_ctx<CtxWgpuDevice>().renderTarget =
+      surfaceTexture.texture.CreateView();
   wv.mut_ctx<CtxFrameTime>().secondsSinceLastFrame = dt;
 
   // Execute frame graph...

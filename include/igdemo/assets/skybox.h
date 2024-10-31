@@ -6,6 +6,7 @@
 #include <igdemo/render/animated-pbr.h>
 #include <igdemo/render/processing/equirect-to-cubemap.h>
 #include <igdemo/render/processing/gen-mips.h>
+#include <igdemo/render/static-pbr.h>
 
 namespace igdemo {
 
@@ -26,7 +27,8 @@ struct CtxHdrSkybox {
   wgpu::Texture brdfLut;
   wgpu::TextureView brdfLutView;
 
-  AnimatedPbrIblBindGroup iblBindGroup;
+  AnimatedPbrIblBindGroup iblBindGroupAnimated;
+  StaticPbrIblBindGroup iblBindGroupStatic;
 
   // TODO (sessamekesh): Need the following generated things as well:
   // prefilter map

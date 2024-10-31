@@ -353,11 +353,16 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_skybox(
 
         auto wv = igecs::WorldView::Thin(r);
 
-        const auto& pbr_pipeline = wv.ctx<CtxAnimatedPbrPipeline>();
-        auto ibl_bg =
-            AnimatedPbrIblBindGroup(device, pbr_pipeline.ibl_bgl,
+        const auto& animated_pbr_pipeline = wv.ctx<CtxAnimatedPbrPipeline>();
+        const auto& static_pbr_pipeline = wv.ctx<CtxStaticPbrPipeline>();
+        auto ibl_bg_animated =
+            AnimatedPbrIblBindGroup(device, animated_pbr_pipeline.ibl_bgl,
                                     irradiance_tex->irradianceCubemap.texture,
                                     prefilter_tex->texture, brdf_tex->texture);
+        auto ibl_bg_static =
+            StaticPbrIblBindGroup(device, static_pbr_pipeline.ibl_bgl,
+                                  irradiance_tex->irradianceCubemap.texture,
+                                  prefilter_tex->texture, brdf_tex->texture);
 
         wv.attach_ctx<CtxHdrSkybox>(CtxHdrSkybox{
             skybox_cubemap_rsl->texture,
@@ -368,7 +373,8 @@ std::shared_ptr<igasync::Promise<std::vector<std::string>>> load_skybox(
             prefilter_tex->texture.CreateView(),
             brdf_tex->texture,
             brdf_tex->texture.CreateView(),
-            ibl_bg,
+            ibl_bg_animated,
+            ibl_bg_static,
         });
         wv.attach_ctx<BgSkyboxPipeline>(*std::move(skybox_pipeline));
 

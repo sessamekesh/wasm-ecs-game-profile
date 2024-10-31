@@ -214,7 +214,7 @@ void PbrGeoPassSystem::run(igecs::WorldView* wv) {
     // Static
     pass.SetPipeline(ctxStaticPipeline.pipeline);
     pass.SetBindGroup(0, ctxStaticPbrBindGroup.frameBindGroup);
-    pass.SetBindGroup(3, ctxSkybox.iblBindGroup.bindGroup);
+    pass.SetBindGroup(3, ctxSkybox.iblBindGroupStatic.bindGroup);
     {
       auto view =
           wv->view<const StaticPbrInstance, const StaticPbrModelBindGroup>();
@@ -235,7 +235,7 @@ void PbrGeoPassSystem::run(igecs::WorldView* wv) {
     // Animated
     pass.SetPipeline(ctxPipeline.pipeline);
     pass.SetBindGroup(0, ctxAnimatedPbrBindGroup.frameBindGroup);
-    pass.SetBindGroup(3, ctxSkybox.iblBindGroup.bindGroup);
+    pass.SetBindGroup(3, ctxSkybox.iblBindGroupAnimated.bindGroup);
     {
       auto view =
           wv->view<const AnimatedPbrInstance, const AnimatedPbrSkinBindGroup>();

@@ -10,7 +10,7 @@ FetchContent_MakeAvailable(igasync)
 FetchContent_Declare(
     iggpu
     GIT_REPOSITORY "https://github.com/sessamekesh/iggpu"
-    GIT_TAG "61668168fbba106abe7c0257fa18e075bb666c43"
+    GIT_TAG "d6fec67a3f5791ef9454cc71f2e37fa4521f1722"
 )
 FetchContent_MakeAvailable(iggpu)
 

@@ -9,6 +9,7 @@
 using namespace emscripten;
 
 static std::unique_ptr<iggpu::AppBase> gAppBase = nullptr;
+static std::shared_ptr<igasync::ThreadPool> gThreadPool = nullptr;
 
 igdemo::IgdemoProcTable create_proc_table(
     val dump_profile_cb, val loading_progress_cb,
@@ -30,6 +31,11 @@ igdemo::IgdemoProcTable create_proc_table(
 void cleanup_app_base() {
   if (gAppBase) {
     gAppBase = nullptr;
+  }
+
+  if (gThreadPool) {
+    gThreadPool->clear_all_task_lists();
+    gThreadPool = nullptr;
   }
 }
 
@@ -61,18 +67,24 @@ void create_new_app(std::string canvas_name,
 
             igasync::ThreadPool::Desc thread_pool_desc{};
             if (config.multithreaded) {
+              if (config.threadCountOverride > 0) {
+                thread_pool_desc.AdditionalThreads =
+                    config.threadCountOverride -
+                    std::thread::hardware_concurrency() - 1;
+              } else {
+                thread_pool_desc.AdditionalThreads =
+                    -1;  // To account for main thread
+              }
               thread_pool_desc.UseHardwareConcurrency = true;
-              thread_pool_desc.AdditionalThreads =
-                  -1;  // To account for main thread
             } else {
               thread_pool_desc.UseHardwareConcurrency = false;
               thread_pool_desc.AdditionalThreads = 0;
             }
-            auto thread_pool = igasync::ThreadPool::Create(thread_pool_desc);
+            gThreadPool = igasync::ThreadPool::Create(thread_pool_desc);
             auto async_tasks = igasync::TaskList::Create();
 
             if (config.multithreaded) {
-              thread_pool->add_task_list(async_tasks);
+              gThreadPool->add_task_list(async_tasks);
             } else {
               async_tasks = main_thread_task_list;
             }
@@ -80,7 +92,7 @@ void create_new_app(std::string canvas_name,
             auto load_start_time = std::chrono::high_resolution_clock::now();
             auto app_create_rsl = igdemo::IgdemoApp::Create(
                 gAppBase.get(), std::move(config), std::move(proc_table),
-                thread_pool->thread_ids(), main_thread_task_list, async_tasks);
+                gThreadPool->thread_ids(), main_thread_task_list, async_tasks);
 
             app_create_rsl->consume(
                 [main_thread_task_list, load_start_time,
@@ -108,6 +120,9 @@ void create_new_app(std::string canvas_name,
           main_thread_task_list);
 }
 
+//
+// Bindings
+//
 EMSCRIPTEN_BINDINGS(IgDemoModule) {
   class_<iggpu::AppBase>("AppBase");
 
