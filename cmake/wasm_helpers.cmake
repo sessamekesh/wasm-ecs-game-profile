@@ -43,7 +43,7 @@ function (set_wasm_target_properties)
     target_compile_options(${AWT_TARGET_NAME} PRIVATE "-pthread")
     target_link_options(
       ${AWT_TARGET_NAME} PRIVATE
-        "SHELL:-s ASSERTIONS=1 -s USE_PTHREADS=1 -pthread -sPTHREAD_POOL_SIZE=\"Math.max(((navigator&&navigator.hardwareConcurrency)||4),6)\"")
+        "SHELL:-s ASSERTIONS=1 -s USE_PTHREADS=1 -pthread -sPTHREAD_POOL_SIZE=6")
   endif ()
 
 endfunction ()

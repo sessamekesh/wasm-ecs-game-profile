@@ -39,7 +39,8 @@ the same output directory as your native builds, if you already ran those:
 ```bash
 mkdir out/native && cd out/native
 cmake ../..
-make flatc igpack-gen
+cmake --build . --config Release --target flatc
+cmake --build . --config Release --target igpack-gen
 ```
 
 Also, before running any WASM build, make sure the Emscripten environment is set up:
